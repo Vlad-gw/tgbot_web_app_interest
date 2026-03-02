@@ -2,32 +2,35 @@ from aiogram.fsm.state import StatesGroup, State
 
 # ==== ДОХОД ====
 class IncomeState(StatesGroup):
-    choosing_date = State()               # выбор даты
+    choosing_date = State()               # ввод даты
     choosing_time = State()               # ввод времени
     choosing_category = State()           # выбор категории
+    entering_custom_category = State()    # ввод новой категории
     entering_amount = State()             # ввод суммы
     entering_note = State()               # комментарий
 
 # ==== РАСХОД ====
 class ExpenseState(StatesGroup):
-    choosing_date = State()               # выбор даты
+    choosing_date = State()               # ввод даты
     choosing_time = State()               # ввод времени
     choosing_category = State()           # выбор категории
-    entering_custom_category = State()    # если выбрано "другое"
+    entering_custom_category = State()    # ввод новой категории
     entering_amount = State()             # ввод суммы
     entering_note = State()               # комментарий
+    waiting_for_new_category = State()
 
 # ==== УДАЛЕНИЕ ====
 class DeleteState(StatesGroup):
-    choosing_date = State()              # выбор начальной даты
-    entering_filter_value = State()      # выбор конечной даты
+    choosing_start_date = State()        # ввод начальной даты
+    choosing_end_date = State()          # ввод конечной даты
     confirming = State()                 # подтверждение удаления
 
-# ==== ФИЛЬТР ДЛЯ ИСТОРИИ ====
+# ==== ФИЛЬТР ИСТОРИИ ====
 class FilterState(StatesGroup):
-    choosing_filter_type = State()       # выбор начальной даты
-    entering_filter_value = State()      # выбор конечной даты
+    choosing_start_date = State()        # ввод начальной даты
+    choosing_end_date = State()          # ввод конечной даты
 
+# ==== АНАЛИТИКА ====
 class AnalyticsState(StatesGroup):
     choosing_year = State()
     choosing_start_date = State()

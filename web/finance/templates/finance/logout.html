@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Выход</title>
+</head>
+<body style="font-family:Arial;padding:24px;">
+  <h2>Выход…</h2>
+  <script>
+    localStorage.removeItem("api_key");
+    window.location.href = "/finance/login/";
+  </script>
+</body>
+</html>

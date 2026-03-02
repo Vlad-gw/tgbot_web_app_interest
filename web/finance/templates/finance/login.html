@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login with Telegram</title>
+</head>
+<body style="font-family: Arial, sans-serif; padding: 24px;">
+  <h2>Вход через Telegram</h2>
+  <p>Нажми кнопку, чтобы авторизоваться.</p>
+
+  <pre id="out" style="background:#f5f5f5;padding:12px;border-radius:8px;"></pre>
+
+  <script>
+    // ✅ Делаем функцию точно глобальной ДО загрузки виджета
+    window.onTelegramAuth = async function(user) {
+      const out = document.getElementById("out");
+      out.textContent = "✅ onTelegramAuth вызван!\n" + JSON.stringify(user, null, 2);
+
+      try {
+        const resp = await fetch("/api/auth/telegram/", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(user),
+        });
+
+        const raw = await resp.text();
+        out.textContent += "\n\n⬅️ Ответ сервера:\n" + raw;
+
+        let data = null;
+        try { data = JSON.parse(raw); } catch {}
+
+        if (resp.ok && data && data.api_key) {
+          localStorage.setItem("api_key", data.api_key);
+          out.textContent += "\n\n✅ api_key сохранён, перехожу в /finance/app/";
+          window.location.href = "/finance/app/";
+        } else {
+          out.textContent += "\n\n❌ api_key не получен (см. ответ выше).";
+        }
+      } catch (e) {
+        out.textContent += "\n\n🔥 Ошибка JS:\n" + (e?.stack || e);
+      }
+    }
+  </script>
+
+  <!-- Telegram Login Widget (после объявления window.onTelegramAuth) -->
+  <script src="https://telegram.org/js/telegram-widget.js?22"
+          data-telegram-login="fffinansial_bot"
+          data-size="large"
+          data-userpic="false"
+          data-request-access="write"
+          data-onauth="onTelegramAuth(user)">
+  </script>
+
+</body>
+</html>

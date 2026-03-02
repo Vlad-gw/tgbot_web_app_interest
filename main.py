@@ -15,6 +15,7 @@ from aiogram_calendar import SimpleCalendarCallback
 from handlers import start, transactions, delete, balance, history, analytics, export, profile
 from database.db import db
 
+
 # Загрузка .env
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
