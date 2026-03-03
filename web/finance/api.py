@@ -1,22 +1,20 @@
-# web/finance/api.py
-
 from __future__ import annotations
 
 import hashlib
-import hmac
 import os
 from datetime import datetime, time as dtime
-from typing import Any, Dict
 
 from django.conf import settings
 from django.db.models import Sum
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .auth import generate_api_key, get_user_from_request
-from .models import Transaction, User
+from .models import Transaction, User, AuthCode
 from .serializers import TransactionSerializer
 
 
@@ -26,60 +24,46 @@ def health(_request: Request) -> Response:
 
 
 def _parse_date(s: str):
-    """
-    Parse date in YYYY-MM-DD format to python date.
-    """
     return datetime.strptime(s, "%Y-%m-%d").date()
 
 
-def _check_telegram_auth(data: Dict[str, Any]) -> bool:
-    """
-    Проверка подписи Telegram Login Widget.
-    data содержит поля: id, username, first_name, auth_date, hash, ...
-    """
-    received_hash = data.get("hash")
-    if not received_hash:
-        return False
-
-    auth_data = {k: v for k, v in data.items() if k != "hash"}
-    pairs = [f"{k}={auth_data[k]}" for k in sorted(auth_data.keys())]
-    data_check_string = "\n".join(pairs)
-
-    bot_token = os.getenv("BOT_TOKEN") or getattr(settings, "BOT_TOKEN", "")
-    if not bot_token:
-        return False
-
-    secret_key = hashlib.sha256(bot_token.encode()).digest()
-    calculated_hash = hmac.new(
-        secret_key, data_check_string.encode(), hashlib.sha256
-    ).hexdigest()
-
-    return hmac.compare_digest(calculated_hash, received_hash)
+def _hash_login_code(code: str) -> str:
+    pepper = os.getenv("AUTH_CODE_PEPPER") or getattr(settings, "AUTH_CODE_PEPPER", "")
+    return hashlib.sha256((pepper + code).encode("utf-8")).hexdigest()
 
 
+@csrf_exempt
 @api_view(["POST"])
-def auth_telegram(request: Request) -> Response:
-    payload: Dict[str, Any] = dict(request.data)
+def auth_code(request: Request) -> Response:
+    """
+    Авторизация по одноразовому коду из бота.
+    Ожидает JSON: {"code": "12345678"}
+    Возвращает: {"api_key": "...", "user_id": ..., "telegram_id": ...}
+    """
+    code = (request.data.get("code") or "").strip().replace(" ", "")
+    if not code:
+        return Response({"detail": "Missing code"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not _check_telegram_auth(payload):
-        return Response(
-            {"detail": "Telegram auth failed"},
-            status=status.HTTP_401_UNAUTHORIZED,
-        )
+    code_hash = _hash_login_code(code)
 
-    telegram_id = int(payload["id"])
-    username = payload.get("username")
-    first_name = payload.get("first_name")
+    row = (
+        AuthCode.objects
+        .filter(code_hash=code_hash, used_at__isnull=True, expires_at__gte=timezone.now())
+        .order_by("-id")
+        .first()
+    )
+    if not row:
+        return Response({"detail": "Invalid or expired code"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    telegram_id = int(row.telegram_id)
+
+    # делаем код одноразовым
+    row.used_at = timezone.now()
+    row.save(update_fields=["used_at"])
 
     user = User.objects.filter(telegram_id=telegram_id).first()
     if not user:
-        user = User(telegram_id=telegram_id, username=username, first_name=first_name)
-
-    # обновим данные, если поменялись
-    if username is not None:
-        user.username = username
-    if first_name is not None:
-        user.first_name = first_name
+        user = User(telegram_id=telegram_id)
 
     if not getattr(user, "api_key", None):
         user.api_key = generate_api_key()
@@ -136,7 +120,7 @@ def transactions(request: Request) -> Response:
         d2 = _parse_date(date_to)
         qs = qs.filter(date__lte=datetime.combine(d2, dtime.max))
 
-    data = TransactionSerializer(qs[:500], many=True).data  # лимит для старта
+    data = TransactionSerializer(qs[:500], many=True).data
     return Response(data)
 
 

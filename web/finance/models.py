@@ -83,3 +83,18 @@ class Transaction(models.Model):
     def __str__(self) -> str:
         return f"{self.type} {self.amount} ({self.date:%Y-%m-%d})"
 
+
+class AuthCode(models.Model):
+    id = models.AutoField(primary_key=True)
+    telegram_id = models.BigIntegerField()
+    code_hash = models.TextField()
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = "auth_codes"
+
+    def __str__(self) -> str:
+        return f"AuthCode(tg={self.telegram_id}, exp={self.expires_at}, used={self.used_at})"

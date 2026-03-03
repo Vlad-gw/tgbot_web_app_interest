@@ -5,37 +5,269 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Finance App</title>
 </head>
-<body style="font-family: Arial, sans-serif; padding: 24px;">
-  <h2>Finance Web</h2>
 
-  <button id="btnMe">Загрузить /api/me</button>
-  <button id="btnTx">Загрузить /api/transactions</button>
-  <button id="btnLogout">Выйти</button>
+<body style="font-family: Arial, sans-serif; padding: 20px; max-width: 1100px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+    <h2 style="margin:0;">Finance Web</h2>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span id="who" style="opacity:.75;"></span>
+      <button id="btnLogout">Выйти</button>
+    </div>
+  </div>
 
-  <pre id="out" style="background:#f5f5f5;padding:12px;border-radius:8px;white-space:pre-wrap;"></pre>
+  <div id="msg" style="margin:12px 0; padding:10px 12px; border-radius:10px; background:#f5f5f5; display:none;"></div>
+
+  <!-- Сводка -->
+  <div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px; margin-top:12px;">
+    <div style="padding:12px; border:1px solid #eee; border-radius:12px;">
+      <div style="opacity:.65;">Доход</div>
+      <div id="sumIncome" style="font-size:22px; font-weight:700;">—</div>
+    </div>
+    <div style="padding:12px; border:1px solid #eee; border-radius:12px;">
+      <div style="opacity:.65;">Расход</div>
+      <div id="sumExpense" style="font-size:22px; font-weight:700;">—</div>
+    </div>
+    <div style="padding:12px; border:1px solid #eee; border-radius:12px;">
+      <div style="opacity:.65;">Баланс</div>
+      <div id="sumBalance" style="font-size:22px; font-weight:700;">—</div>
+    </div>
+  </div>
+
+  <!-- Фильтры -->
+  <div style="margin-top:16px; padding:12px; border:1px solid #eee; border-radius:12px;">
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end;">
+      <div>
+        <div style="font-size:12px; opacity:.7; margin-bottom:4px;">Тип</div>
+        <select id="type" style="padding:8px; border-radius:10px; border:1px solid #ddd;">
+          <option value="">Все</option>
+          <option value="income">Доход</option>
+          <option value="expense">Расход</option>
+        </select>
+      </div>
+
+      <div>
+        <div style="font-size:12px; opacity:.7; margin-bottom:4px;">С</div>
+        <input id="from" type="date" style="padding:8px; border-radius:10px; border:1px solid #ddd;" />
+      </div>
+
+      <div>
+        <div style="font-size:12px; opacity:.7; margin-bottom:4px;">По</div>
+        <input id="to" type="date" style="padding:8px; border-radius:10px; border:1px solid #ddd;" />
+      </div>
+
+      <button id="btnRefresh" style="padding:9px 14px; border-radius:10px; cursor:pointer;">
+        Обновить
+      </button>
+
+      <button id="btnClear" style="padding:9px 14px; border-radius:10px; cursor:pointer;">
+        Сбросить
+      </button>
+    </div>
+  </div>
+
+  <!-- Таблица транзакций -->
+  <div style="margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <h3 style="margin:0;">Транзакции</h3>
+      <div id="txCount" style="opacity:.7;"></div>
+    </div>
+
+    <div style="overflow:auto; border:1px solid #eee; border-radius:12px; margin-top:10px;">
+      <table style="width:100%; border-collapse:collapse; min-width: 800px;">
+        <thead>
+          <tr style="background:#fafafa;">
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #eee;">Дата</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #eee;">Тип</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid #eee;">Сумма</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #eee;">Категория</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid #eee;">Комментарий</th>
+          </tr>
+        </thead>
+        <tbody id="txBody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <script>
-    const out = document.getElementById("out");
-    const apiKey = localStorage.getItem("api_key");
-
-    if (!apiKey) {
-      out.textContent = "Нет api_key. Сначала войди через Telegram.\nПерекидываю на /finance/login/";
-      setTimeout(() => window.location.href = "/finance/login/", 1200);
+    // ===== helpers =====
+    function getApiKey() {
+      return localStorage.getItem("api_key");
     }
 
-    async function callApi(path) {
-      const url = path + (path.includes("?") ? "&" : "?") + "api_key=" + encodeURIComponent(apiKey);
-      const resp = await fetch(url);
-      const data = await resp.json();
-      out.textContent = `GET ${url}\n\n` + JSON.stringify(data, null, 2);
+    function showMsg(text, kind="info") {
+      const el = document.getElementById("msg");
+      el.style.display = "block";
+      el.textContent = text;
+
+      // без цветов по просьбе — просто разные префиксы
+      if (kind === "error") el.textContent = "❌ " + text;
+      if (kind === "ok") el.textContent = "✅ " + text;
+      if (kind === "info") el.textContent = "ℹ️ " + text;
     }
 
-    document.getElementById("btnMe").onclick = () => callApi("/api/me/");
-    document.getElementById("btnTx").onclick = () => callApi("/api/transactions/");
+    function hideMsg() {
+      const el = document.getElementById("msg");
+      el.style.display = "none";
+      el.textContent = "";
+    }
+
+    function redirectLogin() {
+      window.location.href = "/finance/login/";
+    }
+
+    async function apiGet(path, params = {}) {
+      const apiKey = getApiKey();
+      if (!apiKey) throw new Error("NO_API_KEY");
+
+      const u = new URL(path, window.location.origin);
+      u.searchParams.set("api_key", apiKey);
+
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== null && String(v).length > 0) {
+          u.searchParams.set(k, v);
+        }
+      }
+
+      const resp = await fetch(u.toString(), { method: "GET" });
+      const raw = await resp.text();
+
+      let data = null;
+      try { data = JSON.parse(raw); } catch {}
+
+      if (!resp.ok) {
+        const msg = (data && data.detail) ? data.detail : raw;
+        const err = new Error(msg);
+        err.status = resp.status;
+        throw err;
+      }
+
+      return data;
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return "—";
+      // iso может быть "2025-05-29T11:27:29"
+      return iso.replace("T", " ").slice(0, 16);
+    }
+
+    function fmtType(t) {
+      if (t === "income") return "Доход";
+      if (t === "expense") return "Расход";
+      return t || "—";
+    }
+
+    function fmtAmount(a) {
+      if (a === null || a === undefined) return "—";
+      const n = Number(a);
+      if (Number.isNaN(n)) return String(a);
+      return n.toFixed(2);
+    }
+
+    // ===== UI actions =====
+    async function loadAll() {
+      hideMsg();
+
+      try {
+        const me = await apiGet("/api/me/");
+        const who = document.getElementById("who");
+        const name = me.username ? ("@" + me.username) : (me.first_name || ("id=" + me.id));
+        who.textContent = name + " (tg: " + (me.telegram_id ?? "—") + ")";
+
+        const t = document.getElementById("type").value;
+        const from = document.getElementById("from").value;
+        const to = document.getElementById("to").value;
+
+        const sum = await apiGet("/api/summary/", { type: t, from, to });
+        document.getElementById("sumIncome").textContent = fmtAmount(sum.income);
+        document.getElementById("sumExpense").textContent = fmtAmount(sum.expense);
+        document.getElementById("sumBalance").textContent = fmtAmount(sum.balance);
+
+        const tx = await apiGet("/api/transactions/", { type: t, from, to });
+        renderTx(tx);
+
+        showMsg("Данные обновлены", "ok");
+      } catch (e) {
+        if (e.message === "NO_API_KEY" || e.status === 401) {
+          localStorage.removeItem("api_key");
+          showMsg("Нужно войти заново", "error");
+          setTimeout(redirectLogin, 600);
+          return;
+        }
+        showMsg(e.message || String(e), "error");
+      }
+    }
+
+    function renderTx(items) {
+      const body = document.getElementById("txBody");
+      body.innerHTML = "";
+
+      const list = Array.isArray(items) ? items : [];
+      document.getElementById("txCount").textContent = "Показано: " + list.length;
+
+      // показываем последние 200, чтобы не убивать браузер
+      const sliced = list.slice(0, 200);
+
+      for (const it of sliced) {
+        const tr = document.createElement("tr");
+
+        const tdDate = document.createElement("td");
+        tdDate.style.padding = "10px";
+        tdDate.style.borderBottom = "1px solid #eee";
+        tdDate.textContent = fmtDate(it.date);
+
+        const tdType = document.createElement("td");
+        tdType.style.padding = "10px";
+        tdType.style.borderBottom = "1px solid #eee";
+        tdType.textContent = fmtType(it.type);
+
+        const tdAmount = document.createElement("td");
+        tdAmount.style.padding = "10px";
+        tdAmount.style.borderBottom = "1px solid #eee";
+        tdAmount.style.textAlign = "right";
+        tdAmount.textContent = fmtAmount(it.amount);
+
+        const tdCat = document.createElement("td");
+        tdCat.style.padding = "10px";
+        tdCat.style.borderBottom = "1px solid #eee";
+        // сериализатор может отдавать category как id/объект/строка — выводим безопасно
+        tdCat.textContent = (it.category_name || it.category || it.category_id || "—");
+
+        const tdNote = document.createElement("td");
+        tdNote.style.padding = "10px";
+        tdNote.style.borderBottom = "1px solid #eee";
+        tdNote.textContent = it.note || "—";
+
+        tr.appendChild(tdDate);
+        tr.appendChild(tdType);
+        tr.appendChild(tdAmount);
+        tr.appendChild(tdCat);
+        tr.appendChild(tdNote);
+
+        body.appendChild(tr);
+      }
+    }
+
+    // ===== events =====
+    document.getElementById("btnRefresh").onclick = loadAll;
+    document.getElementById("btnClear").onclick = () => {
+      document.getElementById("type").value = "";
+      document.getElementById("from").value = "";
+      document.getElementById("to").value = "";
+      loadAll();
+    };
+
     document.getElementById("btnLogout").onclick = () => {
       localStorage.removeItem("api_key");
-      window.location.href = "/finance/login/";
+      redirectLogin();
     };
+
+    // ===== boot =====
+    if (!getApiKey()) {
+      showMsg("Нет api_key. Перенаправляю на /finance/login/ ...", "error");
+      setTimeout(redirectLogin, 600);
+    } else {
+      loadAll();
+    }
   </script>
 </body>
 </html>

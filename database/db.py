@@ -1,8 +1,8 @@
 # database/db.py
 # Работа с PostgreSQL через asyncpg
 
-import asyncpg
 import os
+import asyncpg
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,18 +14,33 @@ DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
 
 
+def _check_db_env() -> None:
+    missing = []
+    for k, v in [
+        ("DB_HOST", DB_HOST),
+        ("DB_NAME", DB_NAME),
+        ("DB_USER", DB_USER),
+        ("DB_PASS", DB_PASS),
+    ]:
+        if not v:
+            missing.append(k)
+    if missing:
+        raise RuntimeError(f"❌ Не заданы переменные в .env: {', '.join(missing)}")
+
+
 class Database:
     def __init__(self):
         self.pool: asyncpg.Pool | None = None
 
     async def connect(self):
+        _check_db_env()
         if self.pool is None:
             self.pool = await asyncpg.create_pool(
                 host=DB_HOST,
                 port=DB_PORT,
                 user=DB_USER,
                 password=DB_PASS,
-                database=DB_NAME
+                database=DB_NAME,
             )
 
     async def disconnect(self):
@@ -34,10 +49,6 @@ class Database:
             self.pool = None
 
     async def _ensure_connected(self):
-        """
-        Гарантирует, что пул БД инициализирован.
-        Работает и для бота, и для ML-скриптов.
-        """
         if self.pool is None:
             await self.connect()
 
@@ -48,22 +59,21 @@ class Database:
         fetch: bool = False,
         fetchval: bool = False,
         fetchrow: bool = False,
-        execute: bool = False
+        execute: bool = False,
     ):
         await self._ensure_connected()
 
         async with self.pool.acquire() as connection:
             if fetch:
                 return await connection.fetch(query, *args)
-            elif fetchval:
+            if fetchval:
                 return await connection.fetchval(query, *args)
-            elif fetchrow:
+            if fetchrow:
                 return await connection.fetchrow(query, *args)
-            elif execute:
+            if execute:
                 return await connection.execute(query, *args)
-            else:
-                raise ValueError("Не указан режим выполнения запроса")
+
+        raise ValueError("Не указан режим выполнения запроса")
 
 
-# Глобальный объект базы данных
 db = Database()
