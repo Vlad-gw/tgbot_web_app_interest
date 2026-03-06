@@ -23,6 +23,10 @@ def main_menu():
             [KeyboardButton(text="🗑 Удаление транзакций")],
             [
                 KeyboardButton(text="📊 Аналитика"),
+                KeyboardButton(text="📈 Прогноз расходов"),
+            ],
+            [
+                KeyboardButton(text="🎯 Установить бюджет"),
                 KeyboardButton(text="📁 Экспорт в Excel"),
             ],
             [

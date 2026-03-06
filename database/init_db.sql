@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS budgets (
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
     month DATE NOT NULL,
-    limit NUMERIC(10,2) NOT NULL,
+    limit_amount NUMERIC(10,2) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

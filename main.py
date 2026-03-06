@@ -15,7 +15,7 @@ from database.db import db
 
 # handlers
 from handlers import admin
-from handlers import start, transactions, delete, balance, history, analytics, export, profile, site_login
+from handlers import start, transactions, delete, balance, history, analytics, export, profile, site_login, forecast, budget
 
 
 # Загружаем .env один раз в точке входа
@@ -52,11 +52,16 @@ def register_routers() -> None:
     dp.include_router(export.router)
     dp.include_router(profile.router)
 
-    # Новый модуль: вход на сайт по коду
+    # Прогноз расходов (новый модуль)
+    dp.include_router(forecast.router)
+
+    # Вход на сайт по коду
     dp.include_router(site_login.router)
 
     # Админка
     dp.include_router(admin.router)
+
+    dp.include_router(budget.router)
 
 
 async def set_bot_commands() -> None:

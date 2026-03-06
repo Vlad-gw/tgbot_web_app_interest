@@ -10,6 +10,8 @@ from . import analytics
 from . import export
 from . import site_login
 from . import transactions
+from . import forecast
+from . import budget
 
 __all__ = [
     "admin",
@@ -22,4 +24,6 @@ __all__ = [
     "export",
     "site_login",
     "transactions",
+    "forecast",
+    "budget",
 ]
