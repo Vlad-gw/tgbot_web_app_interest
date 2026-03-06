@@ -15,8 +15,21 @@ from database.db import db
 
 # handlers
 from handlers import admin
-from handlers import start, quick_add, transactions, delete, balance, history, analytics, export, profile, site_login, forecast, budget
-
+from handlers import (
+    start,
+    quick_add,
+    transactions,
+    delete,
+    balance,
+    history,
+    analytics,
+    export,
+    profile,
+    site_login,
+    forecast,
+    budget,
+    import_statement,
+)
 
 # Загружаем .env один раз в точке входа
 load_dotenv()
@@ -44,8 +57,11 @@ def register_routers() -> None:
     # Быстрый текстовый ввод +1000 / -500
     dp.include_router(quick_add.router)
 
-    # Транзакции (сборный router из handlers/transactions/router.py)
+    # Транзакции
     dp.include_router(transactions.router)
+
+    # Импорт выписки
+    dp.include_router(import_statement.router)
 
     # Остальные модули
     dp.include_router(delete.router)
@@ -54,16 +70,9 @@ def register_routers() -> None:
     dp.include_router(analytics.router)
     dp.include_router(export.router)
     dp.include_router(profile.router)
-
-    # Прогноз расходов (новый модуль)
     dp.include_router(forecast.router)
-
-    # Вход на сайт по коду
     dp.include_router(site_login.router)
-
-    # Админка
     dp.include_router(admin.router)
-
     dp.include_router(budget.router)
 
 

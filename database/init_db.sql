@@ -123,4 +123,50 @@ CREATE TABLE IF NOT EXISTS budget_forecast (
     UNIQUE (user_id, month)
 );
 
+
+-- ============================================================
+-- Импорт банковских выписок
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS statement_imports (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    bank_name TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    period_from DATE,
+    period_to DATE,
+    total_found INTEGER NOT NULL DEFAULT 0,
+    total_imported INTEGER NOT NULL DEFAULT 0,
+    total_duplicates INTEGER NOT NULL DEFAULT 0,
+    total_skipped INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE transactions
+    ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual';
+
+ALTER TABLE transactions
+    ADD COLUMN IF NOT EXISTS source_bank TEXT;
+
+ALTER TABLE transactions
+    ADD COLUMN IF NOT EXISTS source_external_id TEXT;
+
+ALTER TABLE transactions
+    ADD COLUMN IF NOT EXISTS source_hash TEXT;
+
+ALTER TABLE transactions
+    ADD COLUMN IF NOT EXISTS import_batch_id INTEGER REFERENCES statement_imports(id) ON DELETE SET NULL;
+
+ALTER TABLE transactions
+    ADD COLUMN IF NOT EXISTS raw_description TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_transactions_user_bank_external_id
+    ON transactions(user_id, source_bank, source_external_id)
+    WHERE source_external_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_transactions_user_source_hash
+    ON transactions(user_id, source_hash)
+    WHERE source_hash IS NOT NULL;
+
 COMMIT;

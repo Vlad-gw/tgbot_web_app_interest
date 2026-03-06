@@ -26,6 +26,9 @@ def main_menu():
                 KeyboardButton(text="📁 Экспорт в Excel"),
             ],
             [
+                KeyboardButton(text="📥 Импорт выписки"),
+            ],
+            [
                 KeyboardButton(text="👤 Профиль"),
                 KeyboardButton(text="🔑 Войти на сайт"),
             ],

@@ -13,6 +13,7 @@ from . import transactions
 from . import forecast
 from . import budget
 from . import quick_add
+from . import import_statement
 
 __all__ = [
     "admin",
@@ -28,4 +29,5 @@ __all__ = [
     "forecast",
     "budget",
     "quick_add",
+    "import_statement",
 ]
