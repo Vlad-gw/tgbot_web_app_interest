@@ -12,6 +12,7 @@ from . import site_login
 from . import transactions
 from . import forecast
 from . import budget
+from . import quick_add
 
 __all__ = [
     "admin",
@@ -26,4 +27,5 @@ __all__ = [
     "transactions",
     "forecast",
     "budget",
+    "quick_add",
 ]

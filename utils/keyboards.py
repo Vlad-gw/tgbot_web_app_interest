@@ -13,10 +13,6 @@ def main_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📥 Добавить доход"),
-                KeyboardButton(text="📤 Добавить расход"),
-            ],
-            [
                 KeyboardButton(text="💰 Показать баланс"),
                 KeyboardButton(text="📜 История транзакций"),
             ],
@@ -35,7 +31,7 @@ def main_menu():
             ],
         ],
         resize_keyboard=True,
-        input_field_placeholder="Выберите действие",
+        input_field_placeholder="Например: +100000 зарплата вчера 21:21  или  -500 бензин сегодня",
     )
 
 

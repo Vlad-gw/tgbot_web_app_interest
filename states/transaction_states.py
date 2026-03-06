@@ -19,6 +19,11 @@ class ExpenseState(StatesGroup):
     entering_note = State()               # комментарий
     waiting_for_new_category = State()
 
+# ==== БЫСТРЫЙ ВВОД РАСХОДА ====
+class QuickExpenseState(StatesGroup):
+    confirming_ml_category = State()
+    choosing_manual_category = State()
+
 # ==== УДАЛЕНИЕ ====
 class DeleteState(StatesGroup):
     choosing_start_date = State()        # ввод начальной даты

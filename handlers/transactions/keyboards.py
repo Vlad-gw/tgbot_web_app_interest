@@ -35,3 +35,13 @@ def ml_top_keyboard(top, max_buttons: int = 3):
         ])
     buttons.append([InlineKeyboardButton(text="🔄 Другая", callback_data="ml_other")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def quick_expense_confirm_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Подтвердить", callback_data="quick_expense_confirm")],
+            [InlineKeyboardButton(text="🔄 Другая категория", callback_data="quick_expense_other")],
+            [InlineKeyboardButton(text="❌ Отмена", callback_data="quick_expense_cancel")],
+        ]
+    )

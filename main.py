@@ -15,7 +15,7 @@ from database.db import db
 
 # handlers
 from handlers import admin
-from handlers import start, transactions, delete, balance, history, analytics, export, profile, site_login, forecast, budget
+from handlers import start, quick_add, transactions, delete, balance, history, analytics, export, profile, site_login, forecast, budget
 
 
 # Загружаем .env один раз в точке входа
@@ -40,6 +40,9 @@ dp = Dispatcher(storage=MemoryStorage())
 def register_routers() -> None:
     # Базовые
     dp.include_router(start.router)
+
+    # Быстрый текстовый ввод +1000 / -500
+    dp.include_router(quick_add.router)
 
     # Транзакции (сборный router из handlers/transactions/router.py)
     dp.include_router(transactions.router)

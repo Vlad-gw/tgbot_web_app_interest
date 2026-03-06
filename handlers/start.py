@@ -31,8 +31,19 @@ async def cmd_start(message: Message):
 
     await message.answer(
         f"Привет, <b>{message.from_user.first_name}</b>!\n"
-        f"Я помогу тебе вести учёт финансов.\n"
-        f"Выбери действие:",
+        f"Я помогу тебе вести учёт финансов.\n\n"
+        f"<b>Теперь доходы и расходы можно вводить одной строкой.</b>\n\n"
+        f"<b>Примеры:</b>\n"
+        f"<code>+100000 зарплата вчера</code>\n"
+        f"<code>+5000 подарок 01.03.2026</code>\n"
+        f"<code>-500 бензин сегодня</code>\n"
+        f"<code>-1200 кафе вчера 19:30</code>\n\n"
+        f"<b>Можно указывать:</b>\n"
+        f"• описание\n"
+        f"• дату\n"
+        f"• время\n\n"
+        f"<b>Если дату не указать</b> — будет использована сегодняшняя.\n"
+        f"<b>Если время не указать</b> — запись сохранится без указанного времени.",
         reply_markup=main_menu()
     )
 
@@ -40,4 +51,10 @@ async def cmd_start(message: Message):
 @router.message(F.text == "🔙 Назад")
 async def go_back(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("🔁 Главное меню:", reply_markup=main_menu())
+    await message.answer(
+        "🔁 Главное меню:\n\n"
+        "Пример быстрого ввода:\n"
+        "<code>+100000 зарплата вчера 21:21</code>\n"
+        "<code>-500 бензин сегодня</code>",
+        reply_markup=main_menu()
+    )
