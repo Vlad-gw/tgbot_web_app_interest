@@ -12,6 +12,7 @@ from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
 from database.db import db
+from services.reminder_scheduler import start_scheduler, shutdown_scheduler
 
 # handlers
 from handlers import admin
@@ -29,6 +30,7 @@ from handlers import (
     forecast,
     budget,
     import_statement,
+    reminders,
 )
 
 # Загружаем .env один раз в точке входа
@@ -63,6 +65,9 @@ def register_routers() -> None:
     # Импорт выписки
     dp.include_router(import_statement.router)
 
+    # Уведомления
+    dp.include_router(reminders.router)
+
     # Остальные модули
     dp.include_router(delete.router)
     dp.include_router(balance.router)
@@ -89,6 +94,7 @@ async def main() -> None:
     await db.connect()
     register_routers()
     await set_bot_commands()
+    start_scheduler(bot)
 
     logger.info("Бот запущен!")
     await dp.start_polling(bot)
@@ -99,3 +105,8 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logger.info("Бот остановлен.")
+    finally:
+        try:
+            asyncio.run(shutdown_scheduler())
+        except Exception:
+            pass

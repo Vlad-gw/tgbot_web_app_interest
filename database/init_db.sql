@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 -- ============================================================
--- 🔁 БЕЗОПАСНОЕ РАСШИРЕНИЕ transactions (если БД уже есть)
+-- Безопасное расширение transactions
 -- ============================================================
 
 ALTER TABLE transactions
@@ -54,7 +54,6 @@ ALTER TABLE transactions
 ALTER TABLE transactions
     ADD COLUMN IF NOT EXISTS is_category_accepted BOOLEAN NOT NULL DEFAULT TRUE;
 
--- Внешний ключ для suggested_category_id
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -83,7 +82,6 @@ CREATE TABLE IF NOT EXISTS budgets (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Защита от дублей бюджета
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -98,20 +96,49 @@ BEGIN
 END$$;
 
 -- ============================================================
--- Напоминания (scheduler, APScheduler)
+-- Напоминания
+-- Старая структура сохранена и расширена под пользовательские уведомления
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    type TEXT NOT NULL,
-    cron TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'daily_transaction_reminder',
+    cron TEXT NOT NULL DEFAULT '0 20 * * *',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE reminders
+    ADD COLUMN IF NOT EXISTS enabled BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER TABLE reminders
+    ADD COLUMN IF NOT EXISTS remind_time TIME NOT NULL DEFAULT '20:00:00';
+
+ALTER TABLE reminders
+    ADD COLUMN IF NOT EXISTS last_sent_date DATE;
+
+ALTER TABLE reminders
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+UPDATE reminders
+SET enabled = COALESCE(is_active, TRUE)
+WHERE enabled IS DISTINCT FROM COALESCE(is_active, TRUE);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.table_constraints
+        WHERE constraint_name = 'reminders_user_unique'
+    ) THEN
+        ALTER TABLE reminders
+            ADD CONSTRAINT reminders_user_unique UNIQUE (user_id);
+    END IF;
+END$$;
+
 -- ============================================================
--- Прогноз бюджета (ML)
+-- Прогноз бюджета
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS budget_forecast (
@@ -122,7 +149,6 @@ CREATE TABLE IF NOT EXISTS budget_forecast (
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE (user_id, month)
 );
-
 
 -- ============================================================
 -- Импорт банковских выписок
