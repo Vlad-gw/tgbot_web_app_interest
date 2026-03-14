@@ -4,23 +4,35 @@
   <meta charset="utf-8" />
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
   />
   <title>Финансовый помощник</title>
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
     :root {
-      --bg: #081225;
-      --card: #0d1b34;
-      --card-2: #0f2241;
-      --text: #f3f7ff;
-      --muted: #9fb0cf;
-      --border: rgba(255, 255, 255, 0.08);
-      --accent: #3ddc97;
-      --accent-2: #4ea1ff;
-      --danger: #ff5d73;
-      --warning: #ffb84d;
-      --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #f8fafc;
+      --line: #1f2937;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --success: #16a34a;
+      --success-hover: #15803d;
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.15);
+      --danger-bg: rgba(220, 38, 38, 0.15);
+      --success-bg: rgba(22, 163, 74, 0.15);
+      --income: #16a34a;
+      --expense: #ef4444;
+      --input: #0b1220;
+      --chip: #1e293b;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      --radius: 18px;
     }
 
     * {
@@ -41,135 +53,220 @@
     }
 
     .app {
-      max-width: 920px;
+      max-width: 860px;
       margin: 0 auto;
-      padding: 16px 16px 92px;
+      padding: 16px 16px 88px;
     }
 
-    .header {
-      margin-bottom: 14px;
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
     .title {
-      font-size: 30px;
+      font-size: 24px;
       font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 6px;
+      letter-spacing: -0.02em;
     }
 
     .subtitle {
       color: var(--muted);
-      font-size: 14px;
-    }
-
-    .status {
-      margin-top: 10px;
-      color: var(--muted);
       font-size: 13px;
+      margin-top: 4px;
     }
 
-    .section {
-      display: none;
-      animation: fadeIn 0.18s ease;
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
     }
 
-    .section.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+    .card + .card {
+      margin-top: 14px;
     }
 
     .grid {
       display: grid;
       gap: 12px;
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid-3 {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .card {
-      background: linear-gradient(180deg, var(--card) 0%, #09172d 100%);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 16px;
-      box-shadow: var(--shadow);
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .card.compact {
+    .metric {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      border: 1px solid var(--line);
+      border-radius: 16px;
       padding: 14px;
     }
 
-    .card-title {
+    .metric-label {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
       margin-bottom: 8px;
     }
 
-    .card-value {
+    .metric-value {
       font-size: 22px;
       font-weight: 800;
       line-height: 1.2;
-      word-break: break-word;
     }
 
-    .card-subvalue {
-      margin-top: 8px;
-      font-size: 13px;
-      color: var(--muted);
+    .metric-income {
+      color: var(--income);
     }
 
-    .page-title {
-      font-size: 22px;
-      font-weight: 800;
-      margin: 20px 0 14px;
+    .metric-expense {
+      color: var(--expense);
     }
 
-    .toolbar {
+    .metric-balance {
+      color: var(--text);
+    }
+
+    .actions {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: #1f2937;
+      color: var(--text);
+      border: 1px solid #334155;
+    }
+
+    .btn-secondary:hover {
+      background: #243244;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: var(--success-hover);
+    }
+
+    .btn-sm {
+      padding: 9px 12px;
+      font-size: 13px;
+      border-radius: 12px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
       margin-bottom: 12px;
     }
 
-    .chip,
-    .button {
-      border: none;
-      border-radius: 14px;
-      padding: 10px 14px;
-      cursor: pointer;
-      font-size: 14px;
+    .muted {
+      color: var(--muted);
+    }
+
+    .filters {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 12px;
+    }
+
+    .filters .full {
+      grid-column: 1 / -1;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
       font-weight: 600;
-      transition: 0.15s ease;
     }
 
-    .chip {
-      background: #102445;
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      background: var(--input);
+      border: 1px solid #334155;
       color: var(--text);
-      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
     }
 
-    .chip.active {
-      background: var(--accent-2);
-      color: white;
-      border-color: transparent;
+    .textarea {
+      min-height: 92px;
+      resize: vertical;
     }
 
-    .button {
-      background: #12284d;
-      color: var(--text);
-      border: 1px solid var(--border);
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
-    .button.primary {
-      background: linear-gradient(135deg, var(--accent) 0%, #1cc8b1 100%);
-      color: #04231b;
-      border: none;
+    .screen {
+      display: none;
     }
 
-    .button:hover,
-    .chip:hover {
-      transform: translateY(-1px);
+    .screen.active {
+      display: block;
     }
 
     .list {
@@ -178,409 +275,753 @@
       gap: 10px;
     }
 
-    .tx {
+    .tx-item,
+    .budget-item {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .tx-head,
+    .budget-head {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
-      background: linear-gradient(180deg, var(--card) 0%, #09172d 100%);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px 16px;
-      box-shadow: var(--shadow);
     }
 
-    .tx-left {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .tx-title {
-      font-size: 17px;
+    .tx-title,
+    .budget-title {
+      font-size: 15px;
       font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 5px;
-      word-break: break-word;
+      margin-bottom: 4px;
     }
 
-    .tx-meta {
+    .tx-subtitle,
+    .budget-subtitle {
+      font-size: 12px;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-      word-break: break-word;
     }
 
-    .tx-amount {
-      white-space: nowrap;
+    .tx-amount,
+    .budget-amount {
       font-size: 18px;
       font-weight: 800;
-      margin-left: 8px;
+      white-space: nowrap;
     }
 
-    .income {
-      color: var(--accent);
+    .tx-amount.income {
+      color: var(--income);
     }
 
-    .expense {
-      color: var(--danger);
+    .tx-amount.expense {
+      color: var(--expense);
+    }
+
+    .tx-meta,
+    .budget-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .chip {
+      background: var(--chip);
+      border: 1px solid #334155;
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .chip-status-normal {
+      background: var(--success-bg);
+      border-color: rgba(22, 163, 74, 0.4);
+      color: #86efac;
+    }
+
+    .chip-status-warning {
+      background: var(--warning-bg);
+      border-color: rgba(217, 119, 6, 0.4);
+      color: #fdba74;
+    }
+
+    .chip-status-exceeded {
+      background: var(--danger-bg);
+      border-color: rgba(220, 38, 38, 0.4);
+      color: #fca5a5;
+    }
+
+    .tx-actions,
+    .budget-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
     }
 
     .empty {
       text-align: center;
       color: var(--muted);
-      padding: 22px 12px;
-      border: 1px dashed var(--border);
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.02);
+      padding: 22px 10px;
+      border: 1px dashed #334155;
+      border-radius: 16px;
     }
 
-    .split {
+    .profile-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .analytics-grid {
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .profile-row:last-child {
+      border-bottom: 0;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 12px 14px;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(51, 65, 85, 0.8);
+      z-index: 50;
+    }
+
+    .bottom-nav-inner {
+      max-width: 860px;
+      margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
     }
 
-    .bar-list {
+    .nav-btn {
+      border: 1px solid #334155;
+      background: #111827;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.74);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 860px;
+      max-height: 90vh;
+      overflow: auto;
+      background: #0f172a;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      border: 1px solid #334155;
+      padding: 18px 16px 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .close-btn {
+      border: 0;
+      background: #1f2937;
+      color: var(--text);
+      border-radius: 12px;
+      width: 38px;
+      height: 38px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .bar-wrap {
+      margin-top: 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      margin-top: 6px;
     }
 
-    .bar-item {
+    .bar-row {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    .bar-head {
+    .bar-top {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      font-size: 14px;
+      gap: 12px;
+      font-size: 13px;
     }
 
-    .bar-track {
-      height: 10px;
-      background: rgba(255, 255, 255, 0.08);
+    .bar {
+      width: 100%;
+      height: 12px;
       border-radius: 999px;
+      background: #1e293b;
       overflow: hidden;
     }
 
     .bar-fill {
       height: 100%;
       border-radius: 999px;
-      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      background: linear-gradient(90deg, #2563eb, #38bdf8);
     }
 
-    .profile-grid {
+    .bar-fill-warning {
+      background: linear-gradient(90deg, #d97706, #f59e0b);
+    }
+
+    .bar-fill-danger {
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+    }
+
+    .budget-progress {
+      margin-top: 12px;
+    }
+
+    .budget-stats {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
     }
 
-    .profile-row {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .budget-stat {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
     }
 
-    .profile-label {
+    .budget-stat-label {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
+      margin-bottom: 6px;
     }
 
-    .profile-value {
+    .budget-stat-value {
       font-size: 16px;
-      font-weight: 700;
-      word-break: break-word;
+      font-weight: 800;
     }
 
-    .nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(5, 11, 22, 0.92);
-      backdrop-filter: blur(16px);
-      border-top: 1px solid var(--border);
-      z-index: 20;
-    }
-
-    .nav-inner {
-      max-width: 920px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    .nav-btn {
-      border: none;
-      border-radius: 16px;
-      padding: 12px 8px;
-      background: #0f213e;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid var(--border);
-    }
-
-    .nav-btn.active {
-      color: var(--text);
-      background: linear-gradient(180deg, #16345f 0%, #10284b 100%);
-    }
-
-    .top-space {
-      height: 4px;
-    }
-
-    @media (max-width: 760px) {
-      .grid,
-      .analytics-grid,
-      .profile-grid,
-      .split {
+    @media (max-width: 700px) {
+      .grid-4,
+      .grid-3,
+      .grid-2,
+      .filters,
+      .budget-stats {
         grid-template-columns: 1fr;
       }
 
-      .title {
-        font-size: 26px;
+      .app {
+        padding-left: 12px;
+        padding-right: 12px;
       }
 
-      .card-value {
-        font-size: 20px;
+      .bottom-nav-inner {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
       }
 
-      .tx {
-        align-items: flex-start;
-      }
-
-      .tx-amount {
-        font-size: 17px;
+      .nav-btn {
+        font-size: 11px;
+        padding: 10px 6px;
       }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="header">
-      <div class="title">Финансовый помощник</div>
-      <div class="subtitle" id="headerSubtitle">Подключение к Telegram...</div>
-      <div class="status" id="status">Подготовка Mini App...</div>
+    <div class="topbar">
+      <div>
+        <div class="title">Финансовый помощник</div>
+        <div class="subtitle" id="welcomeText">Загрузка Mini App...</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="refreshBtn">Обновить</button>
     </div>
 
-    <div class="top-space"></div>
+    <div id="dashboardScreen" class="screen active">
+      <div class="card">
+        <div class="section-title">Сводка</div>
 
-    <!-- Главная -->
-    <section class="section active" id="section-dashboard">
-      <div class="grid">
-        <div class="card">
-          <div class="card-title">Доходы</div>
-          <div class="card-value" id="incomeValue">—</div>
-          <div class="card-subvalue" id="incomeSub">За текущую выборку</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Расходы</div>
-          <div class="card-value" id="expenseValue">—</div>
-          <div class="card-subvalue" id="expenseSub">За текущую выборку</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Баланс</div>
-          <div class="card-value" id="balanceValue">—</div>
-          <div class="card-subvalue" id="balanceSub">Доходы минус расходы</div>
-        </div>
-      </div>
-
-      <div class="page-title">Последние транзакции</div>
-      <div class="toolbar">
-        <button class="button" id="refreshDashboardBtn">Обновить</button>
-      </div>
-      <div class="list" id="dashboardTransactions">
-        <div class="empty">Транзакции загружаются...</div>
-      </div>
-    </section>
-
-    <!-- Транзакции -->
-    <section class="section" id="section-transactions">
-      <div class="page-title">Транзакции</div>
-
-      <div class="toolbar">
-        <button class="chip active" data-filter="all">Все</button>
-        <button class="chip" data-filter="income">Доходы</button>
-        <button class="chip" data-filter="expense">Расходы</button>
-        <button class="button" id="refreshTransactionsBtn">Обновить</button>
-      </div>
-
-      <div class="list" id="transactionsList">
-        <div class="empty">Загрузка транзакций...</div>
-      </div>
-    </section>
-
-    <!-- Аналитика -->
-    <section class="section" id="section-analytics">
-      <div class="page-title">Аналитика</div>
-
-      <div class="analytics-grid">
-        <div class="card">
-          <div class="card-title">Количество операций</div>
-          <div class="card-value" id="analyticsCount">—</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Средний расход</div>
-          <div class="card-value" id="analyticsAvgExpense">—</div>
-        </div>
-      </div>
-
-      <div class="split" style="margin-top: 12px;">
-        <div class="card">
-          <div class="card-title">Топ категорий расходов</div>
-          <div class="bar-list" id="expenseCategoriesBars">
-            <div class="empty">Нет данных по расходам</div>
+        <div class="grid grid-3">
+          <div class="metric">
+            <div class="metric-label">Доходы</div>
+            <div class="metric-value metric-income" id="incomeValue">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Расходы</div>
+            <div class="metric-value metric-expense" id="expenseValue">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Баланс</div>
+            <div class="metric-value metric-balance" id="balanceValue">—</div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-title">Сводка</div>
-          <div class="profile-row" style="margin-bottom: 10px;">
-            <div class="profile-label">Доходных операций</div>
-            <div class="profile-value" id="analyticsIncomeCount">—</div>
-          </div>
-          <div class="profile-row" style="margin-bottom: 10px;">
-            <div class="profile-label">Расходных операций</div>
-            <div class="profile-value" id="analyticsExpenseCount">—</div>
-          </div>
-          <div class="profile-row">
-            <div class="profile-label">Крупнейший расход</div>
-            <div class="profile-value" id="analyticsMaxExpense">—</div>
-          </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="openAddIncomeBtn">+ Добавить доход</button>
+          <button class="btn btn-secondary" id="openAddExpenseBtn">− Добавить расход</button>
         </div>
+
+        <div class="status" id="summaryStatus"></div>
       </div>
-    </section>
 
-    <!-- Профиль -->
-    <section class="section" id="section-profile">
-      <div class="page-title">Профиль</div>
-
-      <div class="profile-grid">
-        <div class="card compact">
-          <div class="profile-row">
-            <div class="profile-label">Имя</div>
-            <div class="profile-value" id="profileFirstName">—</div>
+      <div class="card">
+        <div class="section-title">Бюджеты за месяц</div>
+        <div class="grid grid-4">
+          <div class="metric">
+            <div class="metric-label">Лимит</div>
+            <div class="metric-value" id="dashboardBudgetLimit">—</div>
           </div>
-        </div>
-
-        <div class="card compact">
-          <div class="profile-row">
-            <div class="profile-label">Username</div>
-            <div class="profile-value" id="profileUsername">—</div>
+          <div class="metric">
+            <div class="metric-label">Потрачено</div>
+            <div class="metric-value metric-expense" id="dashboardBudgetSpent">—</div>
           </div>
-        </div>
-
-        <div class="card compact">
-          <div class="profile-row">
-            <div class="profile-label">Telegram ID</div>
-            <div class="profile-value" id="profileTelegramId">—</div>
+          <div class="metric">
+            <div class="metric-label">Осталось</div>
+            <div class="metric-value" id="dashboardBudgetRemaining">—</div>
           </div>
-        </div>
-
-        <div class="card compact">
-          <div class="profile-row">
-            <div class="profile-label">Дата регистрации</div>
-            <div class="profile-value" id="profileCreatedAt">—</div>
+          <div class="metric">
+            <div class="metric-label">Проблемные бюджеты</div>
+            <div class="metric-value" id="dashboardBudgetAlerts">—</div>
           </div>
         </div>
       </div>
 
-      <div class="page-title">Общая статистика</div>
+      <div class="card">
+        <div class="section-title">Последние транзакции</div>
+        <div id="recentTransactions" class="list"></div>
+      </div>
 
-      <div class="grid">
-        <div class="card">
-          <div class="card-title">Всего операций</div>
-          <div class="card-value" id="profileTotalTransactions">—</div>
+      <div class="card">
+        <div class="section-title">Аналитика по категориям</div>
+        <div class="muted">Показываются расходы по категориям из загруженных транзакций.</div>
+        <div id="analyticsBars" class="bar-wrap"></div>
+      </div>
+    </div>
+
+    <div id="transactionsScreen" class="screen">
+      <div class="card">
+        <div class="section-title">Транзакции</div>
+
+        <div class="filters">
+          <div class="field">
+            <label for="filterType">Тип</label>
+            <select id="filterType" class="select">
+              <option value="">Все</option>
+              <option value="income">Доходы</option>
+              <option value="expense">Расходы</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="filterCategory">Категория</label>
+            <select id="filterCategory" class="select">
+              <option value="">Все категории</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="filterFrom">Дата от</label>
+            <input id="filterFrom" class="input" type="date" />
+          </div>
+
+          <div class="field">
+            <label for="filterTo">Дата до</label>
+            <input id="filterTo" class="input" type="date" />
+          </div>
+
+          <div class="field full">
+            <label for="filterSearch">Поиск</label>
+            <input
+              id="filterSearch"
+              class="input"
+              type="text"
+              placeholder="Например: кофе, зарплата, бензин"
+            />
+          </div>
         </div>
-        <div class="card">
-          <div class="card-title">Доходов всего</div>
-          <div class="card-value" id="profileTotalIncome">—</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Расходов всего</div>
-          <div class="card-value" id="profileTotalExpense">—</div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="applyFiltersBtn">Применить</button>
+          <button class="btn btn-secondary" id="resetFiltersBtn">Сбросить</button>
+          <button class="btn btn-success" id="transactionsAddBtn">Новая транзакция</button>
         </div>
       </div>
-    </section>
+
+      <div class="card">
+        <div id="transactionsList" class="list"></div>
+      </div>
+    </div>
+
+    <div id="analyticsScreen" class="screen">
+      <div class="card">
+        <div class="section-title">Аналитика</div>
+        <div class="muted" id="analyticsText">
+          Загружаем данные...
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Расходы по категориям</div>
+        <div id="fullAnalyticsBars" class="bar-wrap"></div>
+      </div>
+    </div>
+
+    <div id="budgetsScreen" class="screen">
+      <div class="card">
+        <div class="section-title">Бюджеты</div>
+
+        <div class="filters">
+          <div class="field">
+            <label for="budgetMonthFilter">Месяц</label>
+            <input id="budgetMonthFilter" class="input" type="month" />
+          </div>
+
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" id="applyBudgetMonthBtn">Показать</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-success" id="openAddBudgetBtn">Добавить бюджет</button>
+        </div>
+
+        <div class="status" id="budgetSummaryStatus"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Общая сводка</div>
+        <div class="grid grid-4">
+          <div class="metric">
+            <div class="metric-label">Всего лимит</div>
+            <div class="metric-value" id="budgetTotalLimit">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Всего потрачено</div>
+            <div class="metric-value metric-expense" id="budgetTotalSpent">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Всего осталось</div>
+            <div class="metric-value" id="budgetTotalRemaining">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Бюджетов</div>
+            <div class="metric-value" id="budgetCountValue">—</div>
+          </div>
+        </div>
+
+        <div class="budget-stats">
+          <div class="budget-stat">
+            <div class="budget-stat-label">Норма</div>
+            <div class="budget-stat-value" id="budgetNormalCount">—</div>
+          </div>
+          <div class="budget-stat">
+            <div class="budget-stat-label">Почти лимит</div>
+            <div class="budget-stat-value" id="budgetWarningCount">—</div>
+          </div>
+          <div class="budget-stat">
+            <div class="budget-stat-label">Превышено</div>
+            <div class="budget-stat-value" id="budgetExceededCount">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Список бюджетов</div>
+        <div id="budgetsList" class="list"></div>
+      </div>
+    </div>
+
+    <div id="profileScreen" class="screen">
+      <div class="card">
+        <div class="section-title">Профиль</div>
+        <div class="profile-grid" id="profileInfo"></div>
+      </div>
+    </div>
   </div>
 
-  <nav class="nav">
-    <div class="nav-inner">
-      <button class="nav-btn active" data-section="dashboard">Главная</button>
-      <button class="nav-btn" data-section="transactions">Транзакции</button>
-      <button class="nav-btn" data-section="analytics">Аналитика</button>
-      <button class="nav-btn" data-section="profile">Профиль</button>
+  <div class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="nav-btn active" data-screen="dashboardScreen">Главная</button>
+      <button class="nav-btn" data-screen="transactionsScreen">Транзакции</button>
+      <button class="nav-btn" data-screen="analyticsScreen">Аналитика</button>
+      <button class="nav-btn" data-screen="budgetsScreen">Бюджеты</button>
+      <button class="nav-btn" data-screen="profileScreen">Профиль</button>
     </div>
-  </nav>
+  </div>
+
+  <div class="modal-backdrop" id="transactionModalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="transactionModalTitle">Новая транзакция</div>
+        <button class="close-btn" id="closeTransactionModalBtn">×</button>
+      </div>
+
+      <form id="transactionForm">
+        <input type="hidden" id="transactionId" />
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="transactionType">Тип</label>
+            <select id="transactionType" class="select" required>
+              <option value="income">Доход</option>
+              <option value="expense">Расход</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="transactionAmount">Сумма</label>
+            <input
+              id="transactionAmount"
+              class="input"
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              min="0.01"
+              placeholder="Например: 1500"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="transactionCategory">Категория</label>
+            <select id="transactionCategory" class="select">
+              <option value="">Без категории</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="transactionDate">Дата и время</label>
+            <input id="transactionDate" class="input" type="datetime-local" required />
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="transactionNote">Комментарий</label>
+            <textarea
+              id="transactionNote"
+              class="textarea"
+              placeholder="Например: кофе, такси, зарплата, подарок"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" id="saveTransactionBtn">Сохранить</button>
+          <button type="button" class="btn btn-secondary" id="cancelTransactionBtn">Отмена</button>
+        </div>
+
+        <div class="status" id="transactionFormStatus"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="budgetModalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="budgetModalTitle">Новый бюджет</div>
+        <button class="close-btn" id="closeBudgetModalBtn">×</button>
+      </div>
+
+      <form id="budgetForm">
+        <input type="hidden" id="budgetId" />
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="budgetCategory">Категория расходов</label>
+            <select id="budgetCategory" class="select" required>
+              <option value="">Выбери категорию</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="budgetMonth">Месяц</label>
+            <input id="budgetMonth" class="input" type="month" required />
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="budgetLimitAmount">Лимит</label>
+            <input
+              id="budgetLimitAmount"
+              class="input"
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              min="0.01"
+              placeholder="Например: 15000"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" id="saveBudgetBtn">Сохранить</button>
+          <button type="button" class="btn btn-secondary" id="cancelBudgetBtn">Отмена</button>
+        </div>
+
+        <div class="status" id="budgetFormStatus"></div>
+      </form>
+    </div>
+  </div>
 
   <script>
     const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
 
     const state = {
-      auth: null,
+      apiKey: "",
       me: null,
       summary: null,
       transactions: [],
-      currentFilter: "all",
+      categories: [],
+      budgets: [],
+      budgetsSummary: null,
+      selectedBudgetMonth: "",
+      currentScreen: "dashboardScreen",
     };
 
-    const statusEl = document.getElementById("status");
-    const headerSubtitleEl = document.getElementById("headerSubtitle");
+    const els = {
+      welcomeText: document.getElementById("welcomeText"),
+      refreshBtn: document.getElementById("refreshBtn"),
 
-    const incomeEl = document.getElementById("incomeValue");
-    const expenseEl = document.getElementById("expenseValue");
-    const balanceEl = document.getElementById("balanceValue");
+      incomeValue: document.getElementById("incomeValue"),
+      expenseValue: document.getElementById("expenseValue"),
+      balanceValue: document.getElementById("balanceValue"),
+      summaryStatus: document.getElementById("summaryStatus"),
+      recentTransactions: document.getElementById("recentTransactions"),
+      analyticsBars: document.getElementById("analyticsBars"),
+      fullAnalyticsBars: document.getElementById("fullAnalyticsBars"),
+      analyticsText: document.getElementById("analyticsText"),
+      profileInfo: document.getElementById("profileInfo"),
 
-    const dashboardTransactionsEl = document.getElementById("dashboardTransactions");
-    const transactionsListEl = document.getElementById("transactionsList");
+      dashboardBudgetLimit: document.getElementById("dashboardBudgetLimit"),
+      dashboardBudgetSpent: document.getElementById("dashboardBudgetSpent"),
+      dashboardBudgetRemaining: document.getElementById("dashboardBudgetRemaining"),
+      dashboardBudgetAlerts: document.getElementById("dashboardBudgetAlerts"),
 
-    const analyticsCountEl = document.getElementById("analyticsCount");
-    const analyticsAvgExpenseEl = document.getElementById("analyticsAvgExpense");
-    const analyticsIncomeCountEl = document.getElementById("analyticsIncomeCount");
-    const analyticsExpenseCountEl = document.getElementById("analyticsExpenseCount");
-    const analyticsMaxExpenseEl = document.getElementById("analyticsMaxExpense");
-    const expenseCategoriesBarsEl = document.getElementById("expenseCategoriesBars");
+      transactionsList: document.getElementById("transactionsList"),
+      filterType: document.getElementById("filterType"),
+      filterCategory: document.getElementById("filterCategory"),
+      filterFrom: document.getElementById("filterFrom"),
+      filterTo: document.getElementById("filterTo"),
+      filterSearch: document.getElementById("filterSearch"),
+      applyFiltersBtn: document.getElementById("applyFiltersBtn"),
+      resetFiltersBtn: document.getElementById("resetFiltersBtn"),
+      transactionsAddBtn: document.getElementById("transactionsAddBtn"),
 
-    const profileFirstNameEl = document.getElementById("profileFirstName");
-    const profileUsernameEl = document.getElementById("profileUsername");
-    const profileTelegramIdEl = document.getElementById("profileTelegramId");
-    const profileCreatedAtEl = document.getElementById("profileCreatedAt");
-    const profileTotalTransactionsEl = document.getElementById("profileTotalTransactions");
-    const profileTotalIncomeEl = document.getElementById("profileTotalIncome");
-    const profileTotalExpenseEl = document.getElementById("profileTotalExpense");
+      openAddIncomeBtn: document.getElementById("openAddIncomeBtn"),
+      openAddExpenseBtn: document.getElementById("openAddExpenseBtn"),
 
-    const navButtons = [...document.querySelectorAll(".nav-btn")];
-    const sections = [...document.querySelectorAll(".section")];
-    const filterButtons = [...document.querySelectorAll(".chip[data-filter]")];
+      transactionModalBackdrop: document.getElementById("transactionModalBackdrop"),
+      transactionModalTitle: document.getElementById("transactionModalTitle"),
+      closeTransactionModalBtn: document.getElementById("closeTransactionModalBtn"),
+      cancelTransactionBtn: document.getElementById("cancelTransactionBtn"),
+      transactionForm: document.getElementById("transactionForm"),
+      transactionId: document.getElementById("transactionId"),
+      transactionType: document.getElementById("transactionType"),
+      transactionAmount: document.getElementById("transactionAmount"),
+      transactionCategory: document.getElementById("transactionCategory"),
+      transactionDate: document.getElementById("transactionDate"),
+      transactionNote: document.getElementById("transactionNote"),
+      transactionFormStatus: document.getElementById("transactionFormStatus"),
+      saveTransactionBtn: document.getElementById("saveTransactionBtn"),
 
-    const refreshDashboardBtn = document.getElementById("refreshDashboardBtn");
-    const refreshTransactionsBtn = document.getElementById("refreshTransactionsBtn");
+      budgetMonthFilter: document.getElementById("budgetMonthFilter"),
+      applyBudgetMonthBtn: document.getElementById("applyBudgetMonthBtn"),
+      openAddBudgetBtn: document.getElementById("openAddBudgetBtn"),
+      budgetSummaryStatus: document.getElementById("budgetSummaryStatus"),
+      budgetTotalLimit: document.getElementById("budgetTotalLimit"),
+      budgetTotalSpent: document.getElementById("budgetTotalSpent"),
+      budgetTotalRemaining: document.getElementById("budgetTotalRemaining"),
+      budgetCountValue: document.getElementById("budgetCountValue"),
+      budgetNormalCount: document.getElementById("budgetNormalCount"),
+      budgetWarningCount: document.getElementById("budgetWarningCount"),
+      budgetExceededCount: document.getElementById("budgetExceededCount"),
+      budgetsList: document.getElementById("budgetsList"),
+
+      budgetModalBackdrop: document.getElementById("budgetModalBackdrop"),
+      budgetModalTitle: document.getElementById("budgetModalTitle"),
+      closeBudgetModalBtn: document.getElementById("closeBudgetModalBtn"),
+      cancelBudgetBtn: document.getElementById("cancelBudgetBtn"),
+      budgetForm: document.getElementById("budgetForm"),
+      budgetId: document.getElementById("budgetId"),
+      budgetCategory: document.getElementById("budgetCategory"),
+      budgetMonth: document.getElementById("budgetMonth"),
+      budgetLimitAmount: document.getElementById("budgetLimitAmount"),
+      budgetFormStatus: document.getElementById("budgetFormStatus"),
+      saveBudgetBtn: document.getElementById("saveBudgetBtn"),
+
+      navButtons: Array.from(document.querySelectorAll(".nav-btn")),
+      screens: Array.from(document.querySelectorAll(".screen")),
+    };
 
     function formatMoney(value) {
       const num = Number(value || 0);
       return new Intl.NumberFormat("ru-RU", {
-        style: "currency",
-        currency: "RUB",
+        minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(num);
-    }
-
-    function formatNumber(value) {
-      return new Intl.NumberFormat("ru-RU").format(Number(value || 0));
     }
 
     function escapeHtml(value) {
@@ -592,304 +1033,814 @@
         .replaceAll("'", "&#039;");
     }
 
-    function parseDateSafe(value) {
-      if (!value) return null;
-      const normalized = String(value).replace(" ", "T");
-      const date = new Date(normalized);
-      return Number.isNaN(date.getTime()) ? null : date;
+    function toDatetimeLocalString(date) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return [
+        date.getFullYear(),
+        "-",
+        pad(date.getMonth() + 1),
+        "-",
+        pad(date.getDate()),
+        "T",
+        pad(date.getHours()),
+        ":",
+        pad(date.getMinutes()),
+      ].join("");
     }
 
-    function formatDate(value) {
-      const date = parseDateSafe(value);
-      if (!date) return "Без даты";
-      return new Intl.DateTimeFormat("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
+    function toMonthString(date) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "—";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) {
+        return String(value);
+      }
+      return d.toLocaleString("ru-RU", {
         year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-      }).format(date);
+      });
     }
 
-    function setStatus(text) {
-      statusEl.textContent = text;
+    function setActiveScreen(screenId) {
+      state.currentScreen = screenId;
+
+      els.screens.forEach((screen) => {
+        screen.classList.toggle("active", screen.id === screenId);
+      });
+
+      els.navButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.screen === screenId);
+      });
     }
 
-    function apiKey() {
-      return localStorage.getItem("mini_app_api_key") || "";
+    function showToast(message) {
+      if (tg?.showPopup) {
+        tg.showPopup({
+          title: "Финансовый помощник",
+          message,
+          buttons: [{ type: "ok" }],
+        });
+      } else {
+        alert(message);
+      }
     }
 
-    async function apiGet(url) {
+    async function apiFetch(url, options = {}) {
+      const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      };
+
+      if (state.apiKey) {
+        headers["X-API-Key"] = state.apiKey;
+      }
+
       const response = await fetch(url, {
-        headers: {
-          "X-API-KEY": apiKey(),
-        },
+        ...options,
+        headers,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      if (response.status === 204) {
+        return null;
       }
 
-      return response.json();
-    }
-
-    async function authenticateMiniApp() {
-      if (!tg) {
-        throw new Error("Telegram WebApp SDK не найден");
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
       }
-
-      tg.ready();
-      tg.expand();
-
-      const initData = tg.initData || "";
-      if (!initData) {
-        throw new Error("initData пустой. Открой Mini App через inline-кнопку.");
-      }
-
-      const response = await fetch("/api/miniapp/auth/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ initData }),
-      });
-
-      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Ошибка авторизации");
+        const msg = data?.detail || "Ошибка запроса";
+        throw new Error(msg);
       }
 
-      localStorage.setItem("mini_app_api_key", data.api_key);
-      state.auth = data;
       return data;
     }
 
-    async function loadMe() {
-      state.me = await apiGet("/api/me/");
-      return state.me;
+    async function authenticateMiniApp() {
+      const initData =
+        tg?.initData ||
+        window.Telegram?.WebApp?.initData ||
+        "";
+
+      if (!initData) {
+        throw new Error("Не удалось получить initData от Telegram WebApp");
+      }
+
+      const data = await apiFetch("/api/miniapp/auth/", {
+        method: "POST",
+        body: JSON.stringify({ initData }),
+        headers: {},
+      });
+
+      if (!data?.api_key) {
+        throw new Error("Сервер не вернул api_key");
+      }
+
+      state.apiKey = data.api_key;
     }
 
-    async function loadSummary() {
-      state.summary = await apiGet("/api/summary/");
-      return state.summary;
+    async function loadMe() {
+      state.me = await apiFetch("/api/me/");
+      const firstName = state.me?.first_name || state.me?.username || "пользователь";
+      els.welcomeText.textContent = `Здравствуйте, ${firstName}`;
+      renderProfile();
+    }
+
+    async function loadCategories(type = "") {
+      const query = type ? `?type=${encodeURIComponent(type)}` : "";
+      state.categories = await apiFetch(`/api/categories/${query}`);
+      fillCategoryFilters();
+      fillTransactionCategorySelect();
+      fillBudgetCategorySelect();
+    }
+
+    function fillCategoryFilters() {
+      const current = els.filterCategory.value;
+      els.filterCategory.innerHTML = `<option value="">Все категории</option>`;
+
+      state.categories.forEach((category) => {
+        const option = document.createElement("option");
+        option.value = String(category.id);
+        option.textContent = `${category.name} (${category.type === "income" ? "доход" : "расход"})`;
+        els.filterCategory.appendChild(option);
+      });
+
+      if ([...els.filterCategory.options].some(o => o.value === current)) {
+        els.filterCategory.value = current;
+      }
+    }
+
+    function fillTransactionCategorySelect() {
+      const type = els.transactionType.value;
+      const current = els.transactionCategory.value;
+      const filtered = state.categories.filter((c) => c.type === type);
+
+      els.transactionCategory.innerHTML = `<option value="">Без категории</option>`;
+
+      filtered.forEach((category) => {
+        const option = document.createElement("option");
+        option.value = String(category.id);
+        option.textContent = category.name;
+        els.transactionCategory.appendChild(option);
+      });
+
+      if ([...els.transactionCategory.options].some(o => o.value === current)) {
+        els.transactionCategory.value = current;
+      } else {
+        els.transactionCategory.value = "";
+      }
+    }
+
+    function fillBudgetCategorySelect() {
+      const current = els.budgetCategory.value;
+      const filtered = state.categories.filter((c) => c.type === "expense");
+
+      els.budgetCategory.innerHTML = `<option value="">Выбери категорию</option>`;
+
+      filtered.forEach((category) => {
+        const option = document.createElement("option");
+        option.value = String(category.id);
+        option.textContent = category.name;
+        els.budgetCategory.appendChild(option);
+      });
+
+      if ([...els.budgetCategory.options].some(o => o.value === current)) {
+        els.budgetCategory.value = current;
+      } else {
+        els.budgetCategory.value = "";
+      }
+    }
+
+    function buildTransactionsUrl() {
+      const params = new URLSearchParams();
+
+      if (els.filterType.value) params.set("type", els.filterType.value);
+      if (els.filterCategory.value) params.set("category_id", els.filterCategory.value);
+      if (els.filterFrom.value) params.set("from", els.filterFrom.value);
+      if (els.filterTo.value) params.set("to", els.filterTo.value);
+      if (els.filterSearch.value.trim()) params.set("q", els.filterSearch.value.trim());
+      params.set("limit", "500");
+
+      const query = params.toString();
+      return `/api/transactions/${query ? `?${query}` : ""}`;
+    }
+
+    function getSelectedBudgetMonth() {
+      if (!els.budgetMonthFilter.value) {
+        els.budgetMonthFilter.value = toMonthString(new Date());
+      }
+      state.selectedBudgetMonth = els.budgetMonthFilter.value;
+      return state.selectedBudgetMonth;
     }
 
     async function loadTransactions() {
-      state.transactions = await apiGet("/api/transactions/");
-      return state.transactions;
+      els.transactionsList.innerHTML = `<div class="loading">Загрузка транзакций...</div>`;
+      state.transactions = await apiFetch(buildTransactionsUrl());
+      renderTransactions();
+      renderRecentTransactions();
+      renderAnalytics();
     }
 
-    function txTitle(tx) {
-      return tx.note || tx.raw_description || tx.category_name || "Без названия";
+    async function loadSummary() {
+      state.summary = await apiFetch("/api/summary/");
+      renderSummary();
     }
 
-    function txCategory(tx) {
-      return tx.category_name || (tx.type === "income" ? "Доход" : "Расход");
+    async function loadBudgets() {
+      const month = getSelectedBudgetMonth();
+      els.budgetsList.innerHTML = `<div class="loading">Загрузка бюджетов...</div>`;
+      state.budgets = await apiFetch(`/api/budgets/?month=${encodeURIComponent(month)}`);
+      state.budgetsSummary = await apiFetch(`/api/budgets/summary/?month=${encodeURIComponent(month)}`);
+      renderBudgetsSummary();
+      renderBudgetsList();
+      renderDashboardBudgets();
+    }
+
+    function renderSummary() {
+      const summary = state.summary || {};
+      els.incomeValue.textContent = `${formatMoney(summary.income)} ₽`;
+      els.expenseValue.textContent = `${formatMoney(summary.expense)} ₽`;
+      els.balanceValue.textContent = `${formatMoney(summary.balance)} ₽`;
+      els.summaryStatus.textContent = `Всего транзакций: ${summary.transactions_count ?? 0}`;
+    }
+
+    function renderRecentTransactions() {
+      const container = els.recentTransactions;
+      const items = state.transactions.slice(0, 5);
+
+      if (!items.length) {
+        container.innerHTML = `<div class="empty">Пока нет транзакций</div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(renderTransactionCard).join("");
+      attachTransactionActionHandlers(container);
+    }
+
+    function renderTransactions() {
+      const container = els.transactionsList;
+
+      if (!state.transactions.length) {
+        container.innerHTML = `<div class="empty">По выбранным фильтрам ничего не найдено</div>`;
+        return;
+      }
+
+      container.innerHTML = state.transactions.map(renderTransactionCard).join("");
+      attachTransactionActionHandlers(container);
     }
 
     function renderTransactionCard(tx) {
-      const isIncome = tx.type === "income";
-      const amountClass = isIncome ? "income" : "expense";
-      const sign = isIncome ? "+" : "-";
+      const amountClass = tx.type === "income" ? "income" : "expense";
+      const amountSign = tx.type === "income" ? "+" : "−";
+      const categoryName = tx.category_name || "Без категории";
+      const note = tx.note ? escapeHtml(tx.note) : "Без комментария";
 
       return `
-        <div class="tx">
-          <div class="tx-left">
-            <div class="tx-title">${escapeHtml(txTitle(tx))}</div>
-            <div class="tx-meta">
-              ${escapeHtml(txCategory(tx))} · ${escapeHtml(formatDate(tx.date))}
+        <div class="tx-item">
+          <div class="tx-head">
+            <div>
+              <div class="tx-title">${escapeHtml(categoryName)}</div>
+              <div class="tx-subtitle">${escapeHtml(note)}</div>
+            </div>
+            <div class="tx-amount ${amountClass}">
+              ${amountSign}${formatMoney(tx.amount)} ₽
             </div>
           </div>
-          <div class="tx-amount ${amountClass}">
-            ${sign} ${escapeHtml(formatMoney(tx.amount))}
+
+          <div class="tx-meta">
+            <span class="chip">${tx.type === "income" ? "Доход" : "Расход"}</span>
+            <span class="chip">${escapeHtml(formatDateTime(tx.date))}</span>
+            <span class="chip">ID: ${tx.id}</span>
+          </div>
+
+          <div class="tx-actions">
+            <button class="btn btn-secondary btn-sm js-edit-tx" data-id="${tx.id}">
+              Редактировать
+            </button>
+            <button class="btn btn-danger btn-sm js-delete-tx" data-id="${tx.id}">
+              Удалить
+            </button>
           </div>
         </div>
       `;
     }
 
-    function renderDashboard() {
-      const summary = state.summary || { income: 0, expense: 0, balance: 0 };
+    function attachTransactionActionHandlers(container) {
+      container.querySelectorAll(".js-edit-tx").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await openEditTransactionModal(btn.dataset.id);
+        });
+      });
 
-      incomeEl.textContent = formatMoney(summary.income);
-      expenseEl.textContent = formatMoney(summary.expense);
-      balanceEl.textContent = formatMoney(summary.balance);
-
-      const items = state.transactions.slice(0, 5);
-      if (!items.length) {
-        dashboardTransactionsEl.innerHTML = `<div class="empty">Пока нет транзакций</div>`;
-      } else {
-        dashboardTransactionsEl.innerHTML = items.map(renderTransactionCard).join("");
-      }
+      container.querySelectorAll(".js-delete-tx").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await deleteTransaction(btn.dataset.id);
+        });
+      });
     }
 
-    function filteredTransactions() {
-      if (state.currentFilter === "all") return state.transactions;
-      return state.transactions.filter((tx) => tx.type === state.currentFilter);
-    }
-
-    function renderTransactions() {
-      const items = filteredTransactions();
-
-      if (!items.length) {
-        transactionsListEl.innerHTML = `<div class="empty">Нет транзакций для выбранного фильтра</div>`;
+    function renderProfile() {
+      const user = state.me;
+      if (!user) {
+        els.profileInfo.innerHTML = `<div class="empty">Нет данных профиля</div>`;
         return;
       }
 
-      transactionsListEl.innerHTML = items.map(renderTransactionCard).join("");
+      const rows = [
+        ["ID пользователя", user.id ?? "—"],
+        ["Telegram ID", user.telegram_id ?? "—"],
+        ["Username", user.username ? `@${user.username}` : "—"],
+        ["Имя", user.first_name || "—"],
+        ["Создан", formatDateTime(user.created_at)],
+      ];
+
+      els.profileInfo.innerHTML = rows.map(([label, value]) => `
+        <div class="profile-row">
+          <div class="muted">${escapeHtml(label)}</div>
+          <div>${escapeHtml(String(value))}</div>
+        </div>
+      `).join("");
     }
 
     function renderAnalytics() {
-      const all = state.transactions || [];
-      const incomeTx = all.filter((tx) => tx.type === "income");
-      const expenseTx = all.filter((tx) => tx.type === "expense");
+      const expenses = state.transactions.filter((tx) => tx.type === "expense");
+      const categoryTotals = {};
 
-      analyticsCountEl.textContent = formatNumber(all.length);
-      analyticsIncomeCountEl.textContent = formatNumber(incomeTx.length);
-      analyticsExpenseCountEl.textContent = formatNumber(expenseTx.length);
+      expenses.forEach((tx) => {
+        const key = tx.category_name || "Без категории";
+        categoryTotals[key] = (categoryTotals[key] || 0) + Number(tx.amount || 0);
+      });
 
-      const expenseAmounts = expenseTx.map((tx) => Number(tx.amount || 0));
-      const avgExpense = expenseAmounts.length
-        ? expenseAmounts.reduce((a, b) => a + b, 0) / expenseAmounts.length
-        : 0;
-      analyticsAvgExpenseEl.textContent = formatMoney(avgExpense);
+      const entries = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+      const total = entries.reduce((sum, [, value]) => sum + value, 0);
 
-      const maxExpense = expenseTx.length
-        ? Math.max(...expenseAmounts)
-        : 0;
-      analyticsMaxExpenseEl.textContent = formatMoney(maxExpense);
-
-      const categoryMap = {};
-      for (const tx of expenseTx) {
-        const key = txCategory(tx);
-        categoryMap[key] = (categoryMap[key] || 0) + Number(tx.amount || 0);
-      }
-
-      const sorted = Object.entries(categoryMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-
-      if (!sorted.length) {
-        expenseCategoriesBarsEl.innerHTML = `<div class="empty">Нет данных по расходам</div>`;
+      if (!entries.length || total <= 0) {
+        els.analyticsBars.innerHTML = `<div class="empty">Нет данных для аналитики</div>`;
+        els.fullAnalyticsBars.innerHTML = `<div class="empty">Нет данных для аналитики</div>`;
+        els.analyticsText.textContent = "Пока нет расходов для аналитики.";
         return;
       }
 
-      const maxValue = sorted[0][1] || 1;
-
-      expenseCategoriesBarsEl.innerHTML = sorted.map(([name, value]) => {
-        const width = Math.max(8, Math.round((value / maxValue) * 100));
+      const html = entries.map(([name, value]) => {
+        const percent = total > 0 ? (value / total) * 100 : 0;
         return `
-          <div class="bar-item">
-            <div class="bar-head">
-              <span>${escapeHtml(name)}</span>
-              <span>${escapeHtml(formatMoney(value))}</span>
+          <div class="bar-row">
+            <div class="bar-top">
+              <div>${escapeHtml(name)}</div>
+              <div>${formatMoney(value)} ₽ · ${percent.toFixed(1)}%</div>
             </div>
-            <div class="bar-track">
-              <div class="bar-fill" style="width:${width}%"></div>
+            <div class="bar">
+              <div class="bar-fill" style="width: ${Math.min(percent, 100)}%"></div>
             </div>
           </div>
         `;
       }).join("");
+
+      els.analyticsBars.innerHTML = html;
+      els.fullAnalyticsBars.innerHTML = html;
+      els.analyticsText.textContent = `Всего расходов в выборке: ${formatMoney(total)} ₽`;
     }
 
-    function renderProfile() {
-      const me = state.me || {};
-      const summary = state.summary || { income: 0, expense: 0 };
+    function renderBudgetsSummary() {
+      const summary = state.budgetsSummary;
 
-      profileFirstNameEl.textContent = me.first_name || "—";
-      profileUsernameEl.textContent = me.username ? `@${me.username}` : "—";
-      profileTelegramIdEl.textContent = me.telegram_id || "—";
-      profileCreatedAtEl.textContent = me.created_at ? formatDate(me.created_at) : "—";
+      if (!summary) {
+        els.budgetTotalLimit.textContent = "—";
+        els.budgetTotalSpent.textContent = "—";
+        els.budgetTotalRemaining.textContent = "—";
+        els.budgetCountValue.textContent = "—";
+        els.budgetNormalCount.textContent = "—";
+        els.budgetWarningCount.textContent = "—";
+        els.budgetExceededCount.textContent = "—";
+        els.budgetSummaryStatus.textContent = "";
+        return;
+      }
 
-      profileTotalTransactionsEl.textContent = formatNumber(state.transactions.length);
-      profileTotalIncomeEl.textContent = formatMoney(summary.income || 0);
-      profileTotalExpenseEl.textContent = formatMoney(summary.expense || 0);
+      els.budgetTotalLimit.textContent = `${formatMoney(summary.total_limit)} ₽`;
+      els.budgetTotalSpent.textContent = `${formatMoney(summary.total_spent)} ₽`;
+      els.budgetTotalRemaining.textContent = `${formatMoney(summary.total_remaining)} ₽`;
+      els.budgetCountValue.textContent = String(summary.budgets_count ?? 0);
+      els.budgetNormalCount.textContent = String(summary.normal_count ?? 0);
+      els.budgetWarningCount.textContent = String(summary.warning_count ?? 0);
+      els.budgetExceededCount.textContent = String(summary.exceeded_count ?? 0);
+      els.budgetSummaryStatus.textContent = `Месяц: ${summary.month_label || state.selectedBudgetMonth}`;
     }
 
-    function renderAll() {
-      renderDashboard();
-      renderTransactions();
-      renderAnalytics();
-      renderProfile();
+    function renderDashboardBudgets() {
+      const summary = state.budgetsSummary;
+
+      if (!summary) {
+        els.dashboardBudgetLimit.textContent = "—";
+        els.dashboardBudgetSpent.textContent = "—";
+        els.dashboardBudgetRemaining.textContent = "—";
+        els.dashboardBudgetAlerts.textContent = "—";
+        return;
+      }
+
+      els.dashboardBudgetLimit.textContent = `${formatMoney(summary.total_limit)} ₽`;
+      els.dashboardBudgetSpent.textContent = `${formatMoney(summary.total_spent)} ₽`;
+      els.dashboardBudgetRemaining.textContent = `${formatMoney(summary.total_remaining)} ₽`;
+      els.dashboardBudgetAlerts.textContent = `${summary.warning_count + summary.exceeded_count}`;
     }
 
-    function switchSection(name) {
-      sections.forEach((section) => {
-        section.classList.toggle("active", section.id === `section-${name}`);
+    function renderBudgetsList() {
+      const container = els.budgetsList;
+
+      if (!state.budgets.length) {
+        container.innerHTML = `<div class="empty">На выбранный месяц бюджеты пока не созданы</div>`;
+        return;
+      }
+
+      container.innerHTML = state.budgets.map(renderBudgetCard).join("");
+      attachBudgetActionHandlers(container);
+    }
+
+    function getBudgetStatusClass(status) {
+      if (status === "warning") return "chip-status-warning";
+      if (status === "exceeded") return "chip-status-exceeded";
+      return "chip-status-normal";
+    }
+
+    function getBudgetBarClass(status) {
+      if (status === "warning") return "bar-fill-warning";
+      if (status === "exceeded") return "bar-fill-danger";
+      return "";
+    }
+
+    function renderBudgetCard(budget) {
+      const usagePercent = Number(budget.usage_percent || 0);
+      const width = Math.min(usagePercent, 100);
+
+      return `
+        <div class="budget-item">
+          <div class="budget-head">
+            <div>
+              <div class="budget-title">${escapeHtml(budget.category_name || "Категория")}</div>
+              <div class="budget-subtitle">Месяц: ${escapeHtml(state.selectedBudgetMonth || budget.month || "")}</div>
+            </div>
+            <div class="budget-amount">${formatMoney(budget.limit_amount)} ₽</div>
+          </div>
+
+          <div class="budget-meta">
+            <span class="chip">Лимит: ${formatMoney(budget.limit_amount)} ₽</span>
+            <span class="chip">Потрачено: ${formatMoney(budget.spent_amount)} ₽</span>
+            <span class="chip">Осталось: ${formatMoney(budget.remaining_amount)} ₽</span>
+            <span class="chip ${getBudgetStatusClass(budget.status)}">${escapeHtml(budget.status_label || "Статус")}</span>
+          </div>
+
+          <div class="budget-progress">
+            <div class="bar-top">
+              <div>Использовано</div>
+              <div>${usagePercent.toFixed(2)}%</div>
+            </div>
+            <div class="bar">
+              <div class="bar-fill ${getBudgetBarClass(budget.status)}" style="width: ${width}%"></div>
+            </div>
+          </div>
+
+          <div class="budget-actions">
+            <button class="btn btn-secondary btn-sm js-edit-budget" data-id="${budget.id}">
+              Редактировать
+            </button>
+            <button class="btn btn-danger btn-sm js-delete-budget" data-id="${budget.id}">
+              Удалить
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachBudgetActionHandlers(container) {
+      container.querySelectorAll(".js-edit-budget").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await openEditBudgetModal(btn.dataset.id);
+        });
       });
 
-      navButtons.forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.section === name);
+      container.querySelectorAll(".js-delete-budget").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await deleteBudget(btn.dataset.id);
+        });
       });
     }
 
-    async function refreshData() {
-      setStatus("Обновление данных...");
-      await loadSummary();
-      await loadTransactions();
-      await loadMe();
-      renderAll();
-      setStatus("Данные обновлены");
+    function openTransactionModal(mode = "create", tx = null, presetType = "expense") {
+      els.transactionForm.reset();
+      els.transactionFormStatus.textContent = "";
+      els.transactionId.value = "";
+
+      if (mode === "edit" && tx) {
+        els.transactionModalTitle.textContent = "Редактировать транзакцию";
+        els.transactionId.value = tx.id;
+        els.transactionType.value = tx.type;
+        fillTransactionCategorySelect();
+        els.transactionAmount.value = tx.amount;
+        els.transactionCategory.value = tx.category ? String(tx.category) : "";
+        const dt = new Date(tx.date);
+        els.transactionDate.value = Number.isNaN(dt.getTime()) ? "" : toDatetimeLocalString(dt);
+        els.transactionNote.value = tx.note || "";
+      } else {
+        els.transactionModalTitle.textContent = presetType === "income" ? "Новый доход" : "Новый расход";
+        els.transactionType.value = presetType;
+        fillTransactionCategorySelect();
+        els.transactionDate.value = toDatetimeLocalString(new Date());
+      }
+
+      els.transactionModalBackdrop.classList.add("show");
     }
 
-    async function bootstrap() {
+    function closeTransactionModal() {
+      els.transactionModalBackdrop.classList.remove("show");
+    }
+
+    async function openEditTransactionModal(txId) {
       try {
-        setStatus("Авторизация через Telegram...");
-        const auth = await authenticateMiniApp();
-
-        const displayName =
-          auth.first_name ||
-          auth.username ||
-          `ID ${auth.telegram_id}`;
-
-        headerSubtitleEl.textContent = `Пользователь: ${displayName}`;
-
-        await refreshData();
+        const tx = await apiFetch(`/api/transactions/${txId}/`);
+        openTransactionModal("edit", tx);
       } catch (error) {
-        console.error(error);
-        headerSubtitleEl.textContent = "Не удалось загрузить профиль";
-        setStatus(`Ошибка: ${error.message}`);
-
-        dashboardTransactionsEl.innerHTML = `<div class="empty">Не удалось загрузить данные</div>`;
-        transactionsListEl.innerHTML = `<div class="empty">Не удалось загрузить данные</div>`;
-        expenseCategoriesBarsEl.innerHTML = `<div class="empty">Не удалось загрузить аналитику</div>`;
+        showToast(error.message || "Не удалось загрузить транзакцию");
       }
     }
 
-    navButtons.forEach((btn) => {
-      btn.addEventListener("click", () => switchSection(btn.dataset.section));
-    });
+    async function deleteTransaction(txId) {
+      const ok = confirm("Удалить эту транзакцию?");
+      if (!ok) return;
 
-    filterButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.currentFilter = btn.dataset.filter;
+      try {
+        await apiFetch(`/api/transactions/${txId}/`, {
+          method: "DELETE",
+        });
+        showToast("Транзакция удалена");
+        await reloadAllData();
+      } catch (error) {
+        showToast(error.message || "Не удалось удалить транзакцию");
+      }
+    }
 
-        filterButtons.forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
+    async function submitTransactionForm(event) {
+      event.preventDefault();
+      els.transactionFormStatus.textContent = "Сохраняем...";
+      els.saveTransactionBtn.disabled = true;
 
-        renderTransactions();
+      try {
+        const txId = els.transactionId.value.trim();
+
+        const payload = {
+          type: els.transactionType.value,
+          amount: els.transactionAmount.value,
+          category_id: els.transactionCategory.value || null,
+          date: els.transactionDate.value,
+          note: els.transactionNote.value.trim(),
+        };
+
+        if (!payload.type) throw new Error("Выбери тип транзакции");
+        if (!payload.amount) throw new Error("Укажи сумму");
+        if (!payload.date) throw new Error("Укажи дату и время");
+
+        if (txId) {
+          await apiFetch(`/api/transactions/${txId}/`, {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+          });
+          showToast("Транзакция обновлена");
+        } else {
+          await apiFetch("/api/transactions/", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          showToast("Транзакция добавлена");
+        }
+
+        closeTransactionModal();
+        await reloadAllData();
+      } catch (error) {
+        els.transactionFormStatus.textContent = error.message || "Ошибка сохранения";
+      } finally {
+        els.saveTransactionBtn.disabled = false;
+      }
+    }
+
+    function openBudgetModal(mode = "create", budget = null) {
+      els.budgetForm.reset();
+      els.budgetFormStatus.textContent = "";
+      els.budgetId.value = "";
+      fillBudgetCategorySelect();
+
+      if (mode === "edit" && budget) {
+        els.budgetModalTitle.textContent = "Редактировать бюджет";
+        els.budgetId.value = budget.id;
+        els.budgetCategory.value = budget.category ? String(budget.category) : "";
+        els.budgetMonth.value = (budget.month || "").slice(0, 7);
+        els.budgetLimitAmount.value = budget.limit_amount || "";
+      } else {
+        els.budgetModalTitle.textContent = "Новый бюджет";
+        els.budgetMonth.value = getSelectedBudgetMonth();
+      }
+
+      els.budgetModalBackdrop.classList.add("show");
+    }
+
+    function closeBudgetModal() {
+      els.budgetModalBackdrop.classList.remove("show");
+    }
+
+    async function openEditBudgetModal(budgetId) {
+      try {
+        const budget = await apiFetch(`/api/budgets/${budgetId}/`);
+        openBudgetModal("edit", budget);
+      } catch (error) {
+        showToast(error.message || "Не удалось загрузить бюджет");
+      }
+    }
+
+    async function deleteBudget(budgetId) {
+      const ok = confirm("Удалить этот бюджет?");
+      if (!ok) return;
+
+      try {
+        await apiFetch(`/api/budgets/${budgetId}/`, {
+          method: "DELETE",
+        });
+        showToast("Бюджет удалён");
+        await reloadBudgetsOnly();
+      } catch (error) {
+        showToast(error.message || "Не удалось удалить бюджет");
+      }
+    }
+
+    async function submitBudgetForm(event) {
+      event.preventDefault();
+      els.budgetFormStatus.textContent = "Сохраняем...";
+      els.saveBudgetBtn.disabled = true;
+
+      try {
+        const budgetId = els.budgetId.value.trim();
+
+        const payload = {
+          category_id: els.budgetCategory.value,
+          month: els.budgetMonth.value,
+          limit_amount: els.budgetLimitAmount.value,
+        };
+
+        if (!payload.category_id) throw new Error("Выбери категорию");
+        if (!payload.month) throw new Error("Выбери месяц");
+        if (!payload.limit_amount) throw new Error("Укажи лимит");
+
+        if (budgetId) {
+          await apiFetch(`/api/budgets/${budgetId}/`, {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+          });
+          showToast("Бюджет обновлён");
+        } else {
+          await apiFetch("/api/budgets/", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          showToast("Бюджет сохранён");
+        }
+
+        state.selectedBudgetMonth = payload.month;
+        els.budgetMonthFilter.value = payload.month;
+
+        closeBudgetModal();
+        await reloadBudgetsOnly();
+      } catch (error) {
+        els.budgetFormStatus.textContent = error.message || "Ошибка сохранения";
+      } finally {
+        els.saveBudgetBtn.disabled = false;
+      }
+    }
+
+    async function reloadBudgetsOnly() {
+      await loadBudgets();
+    }
+
+    async function reloadAllData() {
+      await Promise.all([
+        loadSummary(),
+        loadTransactions(),
+        loadMe(),
+        loadBudgets(),
+      ]);
+    }
+
+    function bindEvents() {
+      els.navButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          setActiveScreen(btn.dataset.screen);
+        });
       });
-    });
 
-    refreshDashboardBtn.addEventListener("click", async () => {
+      els.refreshBtn.addEventListener("click", async () => {
+        try {
+          els.summaryStatus.textContent = "Обновляем...";
+          await reloadAllData();
+          els.summaryStatus.textContent = "Данные обновлены";
+        } catch (error) {
+          els.summaryStatus.textContent = error.message || "Ошибка обновления";
+        }
+      });
+
+      els.applyFiltersBtn.addEventListener("click", async () => {
+        await loadTransactions();
+      });
+
+      els.resetFiltersBtn.addEventListener("click", async () => {
+        els.filterType.value = "";
+        els.filterCategory.value = "";
+        els.filterFrom.value = "";
+        els.filterTo.value = "";
+        els.filterSearch.value = "";
+        await loadTransactions();
+      });
+
+      els.transactionsAddBtn.addEventListener("click", () => {
+        openTransactionModal("create", null, "expense");
+      });
+
+      els.openAddIncomeBtn.addEventListener("click", () => {
+        openTransactionModal("create", null, "income");
+      });
+
+      els.openAddExpenseBtn.addEventListener("click", () => {
+        openTransactionModal("create", null, "expense");
+      });
+
+      els.transactionType.addEventListener("change", () => {
+        fillTransactionCategorySelect();
+      });
+
+      els.closeTransactionModalBtn.addEventListener("click", closeTransactionModal);
+      els.cancelTransactionBtn.addEventListener("click", closeTransactionModal);
+
+      els.transactionModalBackdrop.addEventListener("click", (event) => {
+        if (event.target === els.transactionModalBackdrop) {
+          closeTransactionModal();
+        }
+      });
+
+      els.transactionForm.addEventListener("submit", submitTransactionForm);
+
+      els.applyBudgetMonthBtn.addEventListener("click", async () => {
+        state.selectedBudgetMonth = els.budgetMonthFilter.value || toMonthString(new Date());
+        await loadBudgets();
+      });
+
+      els.openAddBudgetBtn.addEventListener("click", () => {
+        openBudgetModal("create");
+      });
+
+      els.closeBudgetModalBtn.addEventListener("click", closeBudgetModal);
+      els.cancelBudgetBtn.addEventListener("click", closeBudgetModal);
+
+      els.budgetModalBackdrop.addEventListener("click", (event) => {
+        if (event.target === els.budgetModalBackdrop) {
+          closeBudgetModal();
+        }
+      });
+
+      els.budgetForm.addEventListener("submit", submitBudgetForm);
+    }
+
+    async function initMiniApp() {
       try {
-        await refreshData();
+        bindEvents();
+
+        if (!els.budgetMonthFilter.value) {
+          const currentMonth = toMonthString(new Date());
+          els.budgetMonthFilter.value = currentMonth;
+          state.selectedBudgetMonth = currentMonth;
+        }
+
+        els.welcomeText.textContent = "Авторизация...";
+        await authenticateMiniApp();
+
+        els.welcomeText.textContent = "Загружаем данные...";
+        await loadCategories();
+        await reloadAllData();
+
+        els.welcomeText.textContent =
+          `Здравствуйте, ${state.me?.first_name || state.me?.username || "пользователь"}`;
       } catch (error) {
         console.error(error);
-        setStatus(`Ошибка обновления: ${error.message}`);
+        els.welcomeText.textContent = "Ошибка загрузки Mini App";
+        els.summaryStatus.textContent = error.message || "Не удалось загрузить приложение";
+        showToast(error.message || "Не удалось инициализировать Mini App");
       }
-    });
+    }
 
-    refreshTransactionsBtn.addEventListener("click", async () => {
-      try {
-        await refreshData();
-      } catch (error) {
-        console.error(error);
-        setStatus(`Ошибка обновления: ${error.message}`);
-      }
-    });
-
-    bootstrap();
+    initMiniApp();
   </script>
 </body>
 </html>

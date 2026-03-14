@@ -84,6 +84,37 @@ class Transaction(models.Model):
         return f"{self.type} {self.amount} ({self.date:%Y-%m-%d})"
 
 
+class Budget(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        db_column="user_id",
+        related_name="budgets",
+        null=True,
+        blank=True,
+    )
+
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        db_column="category_id",
+        related_name="budgets",
+    )
+
+    month = models.DateField()
+    limit_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = "budgets"
+
+    def __str__(self) -> str:
+        return f"Budget({self.category_id}, {self.month}, {self.limit_amount})"
+
+
 class AuthCode(models.Model):
     id = models.AutoField(primary_key=True)
     telegram_id = models.BigIntegerField()
