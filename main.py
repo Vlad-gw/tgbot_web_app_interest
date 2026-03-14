@@ -26,7 +26,6 @@ from handlers import (
     analytics,
     export,
     profile,
-    site_login,
     forecast,
     budget,
     import_statement,
@@ -76,7 +75,6 @@ def register_routers() -> None:
     dp.include_router(export.router)
     dp.include_router(profile.router)
     dp.include_router(forecast.router)
-    dp.include_router(site_login.router)
     dp.include_router(admin.router)
     dp.include_router(budget.router)
 

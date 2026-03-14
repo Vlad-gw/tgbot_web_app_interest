@@ -10,18 +10,22 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load env from web/.env
 load_dotenv(BASE_DIR / ".env")
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
-SECRET_KEY = "django-insecure-ifjtnul0ifaej&hj)om5po7cmu!-a*3p44@vhu+m*a=7z7hs22"
-DEBUG = True
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-ifjtnul0ifaej&hj)om5po7cmu!-a*3p44@vhu+m*a=7z7hs22",
+)
+
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "fateful-addilyn-unlionised.ngrok-free.dev",
+    ".trycloudflare.com",
+    ".ngrok-free.dev",
 ]
 
 INSTALLED_APPS = [
@@ -37,15 +41,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-
-    # ✅ ВСЕ POST/PUT/DELETE на /api/* не будут требовать CSRF (чтобы Chrome/Safari работали одинаково)
     "config.middleware.DisableCSRFMiddleware",
-
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -89,21 +89,28 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "en-us"
-
-# ✅ База использует timestamp WITHOUT time zone → отключаем tz в Django
+LANGUAGE_CODE = "ru-ru"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = False
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOW_ALL_ORIGINS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://fateful-addilyn-unlionised.ngrok-free.dev",
+    "https://*.trycloudflare.com",
+    "https://*.ngrok-free.dev",
 ]
 
-# Secure cookies только в проде (DEBUG=False)
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
+
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+}

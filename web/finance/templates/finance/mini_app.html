@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Финансовый помощник</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #081225;
+      --card: #0d1b34;
+      --card-2: #0f2241;
+      --text: #f3f7ff;
+      --muted: #9fb0cf;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #3ddc97;
+      --accent-2: #4ea1ff;
+      --danger: #ff5d73;
+      --warning: #ffb84d;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 16px 16px 92px;
+    }
+
+    .header {
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.18s ease;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--card) 0%, #09172d 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card.compact {
+      padding: 14px;
+    }
+
+    .card-title {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .card-subvalue {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 20px 0 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .chip,
+    .button {
+      border: none;
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: 0.15s ease;
+    }
+
+    .chip {
+      background: #102445;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .chip.active {
+      background: var(--accent-2);
+      color: white;
+      border-color: transparent;
+    }
+
+    .button {
+      background: #12284d;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #1cc8b1 100%);
+      color: #04231b;
+      border: none;
+    }
+
+    .button:hover,
+    .chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tx {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(180deg, var(--card) 0%, #09172d 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .tx-left {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .tx-title {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 5px;
+      word-break: break-word;
+    }
+
+    .tx-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .tx-amount {
+      white-space: nowrap;
+      font-size: 18px;
+      font-weight: 800;
+      margin-left: 8px;
+    }
+
+    .income {
+      color: var(--accent);
+    }
+
+    .expense {
+      color: var(--danger);
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 22px 12px;
+      border: 1px dashed var(--border);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bar-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .bar-track {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .profile-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .profile-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .profile-value {
+      font-size: 16px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(5, 11, 22, 0.92);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      z-index: 20;
+    }
+
+    .nav-inner {
+      max-width: 920px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .nav-btn {
+      border: none;
+      border-radius: 16px;
+      padding: 12px 8px;
+      background: #0f213e;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    .nav-btn.active {
+      color: var(--text);
+      background: linear-gradient(180deg, #16345f 0%, #10284b 100%);
+    }
+
+    .top-space {
+      height: 4px;
+    }
+
+    @media (max-width: 760px) {
+      .grid,
+      .analytics-grid,
+      .profile-grid,
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .title {
+        font-size: 26px;
+      }
+
+      .card-value {
+        font-size: 20px;
+      }
+
+      .tx {
+        align-items: flex-start;
+      }
+
+      .tx-amount {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="title">Финансовый помощник</div>
+      <div class="subtitle" id="headerSubtitle">Подключение к Telegram...</div>
+      <div class="status" id="status">Подготовка Mini App...</div>
+    </div>
+
+    <div class="top-space"></div>
+
+    <!-- Главная -->
+    <section class="section active" id="section-dashboard">
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Доходы</div>
+          <div class="card-value" id="incomeValue">—</div>
+          <div class="card-subvalue" id="incomeSub">За текущую выборку</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Расходы</div>
+          <div class="card-value" id="expenseValue">—</div>
+          <div class="card-subvalue" id="expenseSub">За текущую выборку</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Баланс</div>
+          <div class="card-value" id="balanceValue">—</div>
+          <div class="card-subvalue" id="balanceSub">Доходы минус расходы</div>
+        </div>
+      </div>
+
+      <div class="page-title">Последние транзакции</div>
+      <div class="toolbar">
+        <button class="button" id="refreshDashboardBtn">Обновить</button>
+      </div>
+      <div class="list" id="dashboardTransactions">
+        <div class="empty">Транзакции загружаются...</div>
+      </div>
+    </section>
+
+    <!-- Транзакции -->
+    <section class="section" id="section-transactions">
+      <div class="page-title">Транзакции</div>
+
+      <div class="toolbar">
+        <button class="chip active" data-filter="all">Все</button>
+        <button class="chip" data-filter="income">Доходы</button>
+        <button class="chip" data-filter="expense">Расходы</button>
+        <button class="button" id="refreshTransactionsBtn">Обновить</button>
+      </div>
+
+      <div class="list" id="transactionsList">
+        <div class="empty">Загрузка транзакций...</div>
+      </div>
+    </section>
+
+    <!-- Аналитика -->
+    <section class="section" id="section-analytics">
+      <div class="page-title">Аналитика</div>
+
+      <div class="analytics-grid">
+        <div class="card">
+          <div class="card-title">Количество операций</div>
+          <div class="card-value" id="analyticsCount">—</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Средний расход</div>
+          <div class="card-value" id="analyticsAvgExpense">—</div>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top: 12px;">
+        <div class="card">
+          <div class="card-title">Топ категорий расходов</div>
+          <div class="bar-list" id="expenseCategoriesBars">
+            <div class="empty">Нет данных по расходам</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Сводка</div>
+          <div class="profile-row" style="margin-bottom: 10px;">
+            <div class="profile-label">Доходных операций</div>
+            <div class="profile-value" id="analyticsIncomeCount">—</div>
+          </div>
+          <div class="profile-row" style="margin-bottom: 10px;">
+            <div class="profile-label">Расходных операций</div>
+            <div class="profile-value" id="analyticsExpenseCount">—</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-label">Крупнейший расход</div>
+            <div class="profile-value" id="analyticsMaxExpense">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Профиль -->
+    <section class="section" id="section-profile">
+      <div class="page-title">Профиль</div>
+
+      <div class="profile-grid">
+        <div class="card compact">
+          <div class="profile-row">
+            <div class="profile-label">Имя</div>
+            <div class="profile-value" id="profileFirstName">—</div>
+          </div>
+        </div>
+
+        <div class="card compact">
+          <div class="profile-row">
+            <div class="profile-label">Username</div>
+            <div class="profile-value" id="profileUsername">—</div>
+          </div>
+        </div>
+
+        <div class="card compact">
+          <div class="profile-row">
+            <div class="profile-label">Telegram ID</div>
+            <div class="profile-value" id="profileTelegramId">—</div>
+          </div>
+        </div>
+
+        <div class="card compact">
+          <div class="profile-row">
+            <div class="profile-label">Дата регистрации</div>
+            <div class="profile-value" id="profileCreatedAt">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-title">Общая статистика</div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Всего операций</div>
+          <div class="card-value" id="profileTotalTransactions">—</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Доходов всего</div>
+          <div class="card-value" id="profileTotalIncome">—</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Расходов всего</div>
+          <div class="card-value" id="profileTotalExpense">—</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <button class="nav-btn active" data-section="dashboard">Главная</button>
+      <button class="nav-btn" data-section="transactions">Транзакции</button>
+      <button class="nav-btn" data-section="analytics">Аналитика</button>
+      <button class="nav-btn" data-section="profile">Профиль</button>
+    </div>
+  </nav>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+
+    const state = {
+      auth: null,
+      me: null,
+      summary: null,
+      transactions: [],
+      currentFilter: "all",
+    };
+
+    const statusEl = document.getElementById("status");
+    const headerSubtitleEl = document.getElementById("headerSubtitle");
+
+    const incomeEl = document.getElementById("incomeValue");
+    const expenseEl = document.getElementById("expenseValue");
+    const balanceEl = document.getElementById("balanceValue");
+
+    const dashboardTransactionsEl = document.getElementById("dashboardTransactions");
+    const transactionsListEl = document.getElementById("transactionsList");
+
+    const analyticsCountEl = document.getElementById("analyticsCount");
+    const analyticsAvgExpenseEl = document.getElementById("analyticsAvgExpense");
+    const analyticsIncomeCountEl = document.getElementById("analyticsIncomeCount");
+    const analyticsExpenseCountEl = document.getElementById("analyticsExpenseCount");
+    const analyticsMaxExpenseEl = document.getElementById("analyticsMaxExpense");
+    const expenseCategoriesBarsEl = document.getElementById("expenseCategoriesBars");
+
+    const profileFirstNameEl = document.getElementById("profileFirstName");
+    const profileUsernameEl = document.getElementById("profileUsername");
+    const profileTelegramIdEl = document.getElementById("profileTelegramId");
+    const profileCreatedAtEl = document.getElementById("profileCreatedAt");
+    const profileTotalTransactionsEl = document.getElementById("profileTotalTransactions");
+    const profileTotalIncomeEl = document.getElementById("profileTotalIncome");
+    const profileTotalExpenseEl = document.getElementById("profileTotalExpense");
+
+    const navButtons = [...document.querySelectorAll(".nav-btn")];
+    const sections = [...document.querySelectorAll(".section")];
+    const filterButtons = [...document.querySelectorAll(".chip[data-filter]")];
+
+    const refreshDashboardBtn = document.getElementById("refreshDashboardBtn");
+    const refreshTransactionsBtn = document.getElementById("refreshTransactionsBtn");
+
+    function formatMoney(value) {
+      const num = Number(value || 0);
+      return new Intl.NumberFormat("ru-RU", {
+        style: "currency",
+        currency: "RUB",
+        maximumFractionDigits: 2,
+      }).format(num);
+    }
+
+    function formatNumber(value) {
+      return new Intl.NumberFormat("ru-RU").format(Number(value || 0));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function parseDateSafe(value) {
+      if (!value) return null;
+      const normalized = String(value).replace(" ", "T");
+      const date = new Date(normalized);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function formatDate(value) {
+      const date = parseDateSafe(value);
+      if (!date) return "Без даты";
+      return new Intl.DateTimeFormat("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date);
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function apiKey() {
+      return localStorage.getItem("mini_app_api_key") || "";
+    }
+
+    async function apiGet(url) {
+      const response = await fetch(url, {
+        headers: {
+          "X-API-KEY": apiKey(),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return response.json();
+    }
+
+    async function authenticateMiniApp() {
+      if (!tg) {
+        throw new Error("Telegram WebApp SDK не найден");
+      }
+
+      tg.ready();
+      tg.expand();
+
+      const initData = tg.initData || "";
+      if (!initData) {
+        throw new Error("initData пустой. Открой Mini App через inline-кнопку.");
+      }
+
+      const response = await fetch("/api/miniapp/auth/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ initData }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Ошибка авторизации");
+      }
+
+      localStorage.setItem("mini_app_api_key", data.api_key);
+      state.auth = data;
+      return data;
+    }
+
+    async function loadMe() {
+      state.me = await apiGet("/api/me/");
+      return state.me;
+    }
+
+    async function loadSummary() {
+      state.summary = await apiGet("/api/summary/");
+      return state.summary;
+    }
+
+    async function loadTransactions() {
+      state.transactions = await apiGet("/api/transactions/");
+      return state.transactions;
+    }
+
+    function txTitle(tx) {
+      return tx.note || tx.raw_description || tx.category_name || "Без названия";
+    }
+
+    function txCategory(tx) {
+      return tx.category_name || (tx.type === "income" ? "Доход" : "Расход");
+    }
+
+    function renderTransactionCard(tx) {
+      const isIncome = tx.type === "income";
+      const amountClass = isIncome ? "income" : "expense";
+      const sign = isIncome ? "+" : "-";
+
+      return `
+        <div class="tx">
+          <div class="tx-left">
+            <div class="tx-title">${escapeHtml(txTitle(tx))}</div>
+            <div class="tx-meta">
+              ${escapeHtml(txCategory(tx))} · ${escapeHtml(formatDate(tx.date))}
+            </div>
+          </div>
+          <div class="tx-amount ${amountClass}">
+            ${sign} ${escapeHtml(formatMoney(tx.amount))}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboard() {
+      const summary = state.summary || { income: 0, expense: 0, balance: 0 };
+
+      incomeEl.textContent = formatMoney(summary.income);
+      expenseEl.textContent = formatMoney(summary.expense);
+      balanceEl.textContent = formatMoney(summary.balance);
+
+      const items = state.transactions.slice(0, 5);
+      if (!items.length) {
+        dashboardTransactionsEl.innerHTML = `<div class="empty">Пока нет транзакций</div>`;
+      } else {
+        dashboardTransactionsEl.innerHTML = items.map(renderTransactionCard).join("");
+      }
+    }
+
+    function filteredTransactions() {
+      if (state.currentFilter === "all") return state.transactions;
+      return state.transactions.filter((tx) => tx.type === state.currentFilter);
+    }
+
+    function renderTransactions() {
+      const items = filteredTransactions();
+
+      if (!items.length) {
+        transactionsListEl.innerHTML = `<div class="empty">Нет транзакций для выбранного фильтра</div>`;
+        return;
+      }
+
+      transactionsListEl.innerHTML = items.map(renderTransactionCard).join("");
+    }
+
+    function renderAnalytics() {
+      const all = state.transactions || [];
+      const incomeTx = all.filter((tx) => tx.type === "income");
+      const expenseTx = all.filter((tx) => tx.type === "expense");
+
+      analyticsCountEl.textContent = formatNumber(all.length);
+      analyticsIncomeCountEl.textContent = formatNumber(incomeTx.length);
+      analyticsExpenseCountEl.textContent = formatNumber(expenseTx.length);
+
+      const expenseAmounts = expenseTx.map((tx) => Number(tx.amount || 0));
+      const avgExpense = expenseAmounts.length
+        ? expenseAmounts.reduce((a, b) => a + b, 0) / expenseAmounts.length
+        : 0;
+      analyticsAvgExpenseEl.textContent = formatMoney(avgExpense);
+
+      const maxExpense = expenseTx.length
+        ? Math.max(...expenseAmounts)
+        : 0;
+      analyticsMaxExpenseEl.textContent = formatMoney(maxExpense);
+
+      const categoryMap = {};
+      for (const tx of expenseTx) {
+        const key = txCategory(tx);
+        categoryMap[key] = (categoryMap[key] || 0) + Number(tx.amount || 0);
+      }
+
+      const sorted = Object.entries(categoryMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+      if (!sorted.length) {
+        expenseCategoriesBarsEl.innerHTML = `<div class="empty">Нет данных по расходам</div>`;
+        return;
+      }
+
+      const maxValue = sorted[0][1] || 1;
+
+      expenseCategoriesBarsEl.innerHTML = sorted.map(([name, value]) => {
+        const width = Math.max(8, Math.round((value / maxValue) * 100));
+        return `
+          <div class="bar-item">
+            <div class="bar-head">
+              <span>${escapeHtml(name)}</span>
+              <span>${escapeHtml(formatMoney(value))}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${width}%"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderProfile() {
+      const me = state.me || {};
+      const summary = state.summary || { income: 0, expense: 0 };
+
+      profileFirstNameEl.textContent = me.first_name || "—";
+      profileUsernameEl.textContent = me.username ? `@${me.username}` : "—";
+      profileTelegramIdEl.textContent = me.telegram_id || "—";
+      profileCreatedAtEl.textContent = me.created_at ? formatDate(me.created_at) : "—";
+
+      profileTotalTransactionsEl.textContent = formatNumber(state.transactions.length);
+      profileTotalIncomeEl.textContent = formatMoney(summary.income || 0);
+      profileTotalExpenseEl.textContent = formatMoney(summary.expense || 0);
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderTransactions();
+      renderAnalytics();
+      renderProfile();
+    }
+
+    function switchSection(name) {
+      sections.forEach((section) => {
+        section.classList.toggle("active", section.id === `section-${name}`);
+      });
+
+      navButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.section === name);
+      });
+    }
+
+    async function refreshData() {
+      setStatus("Обновление данных...");
+      await loadSummary();
+      await loadTransactions();
+      await loadMe();
+      renderAll();
+      setStatus("Данные обновлены");
+    }
+
+    async function bootstrap() {
+      try {
+        setStatus("Авторизация через Telegram...");
+        const auth = await authenticateMiniApp();
+
+        const displayName =
+          auth.first_name ||
+          auth.username ||
+          `ID ${auth.telegram_id}`;
+
+        headerSubtitleEl.textContent = `Пользователь: ${displayName}`;
+
+        await refreshData();
+      } catch (error) {
+        console.error(error);
+        headerSubtitleEl.textContent = "Не удалось загрузить профиль";
+        setStatus(`Ошибка: ${error.message}`);
+
+        dashboardTransactionsEl.innerHTML = `<div class="empty">Не удалось загрузить данные</div>`;
+        transactionsListEl.innerHTML = `<div class="empty">Не удалось загрузить данные</div>`;
+        expenseCategoriesBarsEl.innerHTML = `<div class="empty">Не удалось загрузить аналитику</div>`;
+      }
+    }
+
+    navButtons.forEach((btn) => {
+      btn.addEventListener("click", () => switchSection(btn.dataset.section));
+    });
+
+    filterButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.currentFilter = btn.dataset.filter;
+
+        filterButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        renderTransactions();
+      });
+    });
+
+    refreshDashboardBtn.addEventListener("click", async () => {
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error(error);
+        setStatus(`Ошибка обновления: ${error.message}`);
+      }
+    });
+
+    refreshTransactionsBtn.addEventListener("click", async () => {
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error(error);
+        setStatus(`Ошибка обновления: ${error.message}`);
+      }
+    });
+
+    bootstrap();
+  </script>
+</body>
+</html>

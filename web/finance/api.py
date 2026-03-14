@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
+import json
 import os
 from datetime import datetime, time as dtime
+from urllib.parse import parse_qsl
 
-from django.conf import settings
 from django.db.models import Sum
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .auth import generate_api_key, get_user_from_request
-from .models import Transaction, User, AuthCode
+from .models import Transaction, User
 from .serializers import TransactionSerializer
 
 
@@ -27,54 +27,141 @@ def _parse_date(s: str):
     return datetime.strptime(s, "%Y-%m-%d").date()
 
 
-def _hash_login_code(code: str) -> str:
-    pepper = os.getenv("AUTH_CODE_PEPPER") or getattr(settings, "AUTH_CODE_PEPPER", "")
-    return hashlib.sha256((pepper + code).encode("utf-8")).hexdigest()
+def _build_check_string(init_data_raw: str) -> tuple[str, str]:
+    pairs = parse_qsl(init_data_raw, keep_blank_values=True)
+
+    data = []
+    received_hash = None
+
+    for key, value in pairs:
+        if key == "hash":
+            received_hash = value
+        else:
+            data.append((key, value))
+
+    data.sort(key=lambda item: item[0])
+    check_string = "\n".join(f"{key}={value}" for key, value in data)
+
+    return check_string, received_hash or ""
 
 
-@csrf_exempt
+def _validate_telegram_init_data(init_data_raw: str, bot_token: str) -> dict | None:
+    if not init_data_raw or not bot_token:
+        return None
+
+    check_string, received_hash = _build_check_string(init_data_raw)
+    if not received_hash:
+        return None
+
+    secret_key = hmac.new(
+        key=b"WebAppData",
+        msg=bot_token.encode("utf-8"),
+        digestmod=hashlib.sha256,
+    ).digest()
+
+    calculated_hash = hmac.new(
+        key=secret_key,
+        msg=check_string.encode("utf-8"),
+        digestmod=hashlib.sha256,
+    ).hexdigest()
+
+    if not hmac.compare_digest(calculated_hash, received_hash):
+        return None
+
+    parsed = dict(parse_qsl(init_data_raw, keep_blank_values=True))
+    user_raw = parsed.get("user")
+    if not user_raw:
+        return None
+
+    try:
+        return json.loads(user_raw)
+    except json.JSONDecodeError:
+        return None
+
+
 @api_view(["POST"])
-def auth_code(request: Request) -> Response:
+def miniapp_auth(request: Request) -> Response:
     """
-    Авторизация по одноразовому коду из бота.
-    Ожидает JSON: {"code": "12345678"}
-    Возвращает: {"api_key": "...", "user_id": ..., "telegram_id": ...}
+    Авторизация через Telegram Mini App.
+    Ожидает JSON:
+    {
+        "initData": "query_id=...&user=...&auth_date=...&hash=..."
+    }
+
+    Возвращает:
+    {
+        "api_key": "...",
+        "user_id": 1,
+        "telegram_id": 123,
+        "username": "...",
+        "first_name": "..."
+    }
     """
-    code = (request.data.get("code") or "").strip().replace(" ", "")
-    if not code:
-        return Response({"detail": "Missing code"}, status=status.HTTP_400_BAD_REQUEST)
+    init_data = (request.data.get("initData") or "").strip()
+    bot_token = os.getenv("BOT_TOKEN", "").strip()
 
-    code_hash = _hash_login_code(code)
+    if not init_data:
+        return Response(
+            {"detail": "Missing initData"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    row = (
-        AuthCode.objects
-        .filter(code_hash=code_hash, used_at__isnull=True, expires_at__gte=timezone.now())
-        .order_by("-id")
-        .first()
-    )
-    if not row:
-        return Response({"detail": "Invalid or expired code"}, status=status.HTTP_401_UNAUTHORIZED)
+    if not bot_token:
+        return Response(
+            {"detail": "BOT_TOKEN is not configured on server"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
-    telegram_id = int(row.telegram_id)
+    tg_user = _validate_telegram_init_data(init_data, bot_token)
+    if not tg_user:
+        return Response(
+            {"detail": "Invalid Telegram initData"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
-    # делаем код одноразовым
-    row.used_at = timezone.now()
-    row.save(update_fields=["used_at"])
+    telegram_id = tg_user.get("id")
+    if not telegram_id:
+        return Response(
+            {"detail": "Telegram user id not found"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    username = tg_user.get("username")
+    first_name = tg_user.get("first_name")
 
     user = User.objects.filter(telegram_id=telegram_id).first()
+
     if not user:
-        user = User(telegram_id=telegram_id)
+        user = User(
+            telegram_id=telegram_id,
+            username=username,
+            first_name=first_name,
+        )
+
+    changed = False
+
+    if username and user.username != username:
+        user.username = username
+        changed = True
+
+    if first_name and user.first_name != first_name:
+        user.first_name = first_name
+        changed = True
 
     if not getattr(user, "api_key", None):
         user.api_key = generate_api_key()
+        changed = True
 
-    user.save()
+    if changed or not user.pk:
+        user.save()
 
     return Response(
         {
             "api_key": user.api_key,
             "user_id": user.id,
             "telegram_id": user.telegram_id,
+            "username": user.username,
+            "first_name": user.first_name,
         }
     )
 
@@ -95,20 +182,13 @@ def me(request: Request) -> Response:
 
 @api_view(["GET"])
 def transactions(request: Request) -> Response:
-    """
-    Return transactions ONLY for current user (by X-API-KEY or api_key query param).
-    Optional filters:
-      - type=income|expense
-      - from=YYYY-MM-DD
-      - to=YYYY-MM-DD
-    """
     user = get_user_from_request(request)
 
     qs = Transaction.objects.filter(user=user).order_by("-date", "-id")
 
-    t = request.query_params.get("type")
-    if t in ("income", "expense"):
-        qs = qs.filter(type=t)
+    tx_type = request.query_params.get("type")
+    if tx_type in ("income", "expense"):
+        qs = qs.filter(type=tx_type)
 
     date_from = request.query_params.get("from")
     date_to = request.query_params.get("to")
@@ -116,6 +196,7 @@ def transactions(request: Request) -> Response:
     if date_from:
         d1 = _parse_date(date_from)
         qs = qs.filter(date__gte=datetime.combine(d1, dtime.min))
+
     if date_to:
         d2 = _parse_date(date_to)
         qs = qs.filter(date__lte=datetime.combine(d2, dtime.max))
@@ -126,12 +207,6 @@ def transactions(request: Request) -> Response:
 
 @api_view(["GET"])
 def summary(request: Request) -> Response:
-    """
-    Return income/expense/balance ONLY for current user.
-    Optional filters:
-      - from=YYYY-MM-DD
-      - to=YYYY-MM-DD
-    """
     user = get_user_from_request(request)
 
     qs = Transaction.objects.filter(user=user)
@@ -142,6 +217,7 @@ def summary(request: Request) -> Response:
     if date_from:
         d1 = _parse_date(date_from)
         qs = qs.filter(date__gte=datetime.combine(d1, dtime.min))
+
     if date_to:
         d2 = _parse_date(date_to)
         qs = qs.filter(date__lte=datetime.combine(d2, dtime.max))

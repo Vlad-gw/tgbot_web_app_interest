@@ -1,7 +1,6 @@
 from django.urls import path
-from .views import login_page, app_page
+from .views import mini_app_page
 
 urlpatterns = [
-    path("login/", login_page),
-    path("app/", app_page),
+    path("", mini_app_page, name="mini_app"),
 ]
